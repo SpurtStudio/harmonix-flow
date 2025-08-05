@@ -1,96 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
+/* Гармония: Дизайн-система для баланса жизни */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Основная цветовая палитра - вдохновлена природой и гармонией */
+    --harmony-primary-50: 213 100% 96%;
+    --harmony-primary-100: 214 95% 93%;
+    --harmony-primary-200: 213 97% 87%;
+    --harmony-primary-300: 212 96% 78%;
+    --harmony-primary-400: 213 94% 68%;
+    --harmony-primary-500: 217 91% 60%;
+    --harmony-primary-600: 221 83% 53%;
+    --harmony-primary-700: 224 76% 48%;
+    --harmony-primary-800: 226 71% 40%;
+    --harmony-primary-900: 224 64% 33%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Вторичная палитра - для акцентов и целей */
+    --harmony-secondary-50: 270 100% 98%;
+    --harmony-secondary-100: 269 100% 95%;
+    --harmony-secondary-200: 269 100% 92%;
+    --harmony-secondary-300: 269 97% 85%;
+    --harmony-secondary-400: 270 95% 75%;
+    --harmony-secondary-500: 270 91% 65%;
+    --harmony-secondary-600: 271 81% 56%;
+    --harmony-secondary-700: 272 72% 47%;
+    --harmony-secondary-800: 272 67% 39%;
+    --harmony-secondary-900: 273 65% 32%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Нейтральные тона - для стекла и фонов */
+    --harmony-neutral-50: 210 20% 98%;
+    --harmony-neutral-100: 220 14% 96%;
+    --harmony-neutral-200: 220 13% 91%;
+    --harmony-neutral-300: 216 12% 84%;
+    --harmony-neutral-400: 218 11% 65%;
+    --harmony-neutral-500: 220 9% 46%;
+    --harmony-neutral-600: 215 14% 34%;
+    --harmony-neutral-700: 217 19% 27%;
+    --harmony-neutral-800: 215 28% 17%;
+    --harmony-neutral-900: 221 39% 11%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Семантические цвета для 8 сфер жизни */
+    --harmony-work: 45 93% 58%;        /* Золотистый - карьера/работа */
+    --harmony-health: 142 76% 36%;     /* Зеленый - здоровье */
+    --harmony-relationships: 348 83% 47%; /* Розовый - отношения */
+    --harmony-growth: 262 83% 58%;     /* Фиолетовый - развитие */
+    --harmony-hobby: 25 95% 53%;       /* Оранжевый - хобби */
+    --harmony-rest: 197 71% 73%;       /* Голубой - отдых */
+    --harmony-finance: 134 61% 41%;    /* Темно-зеленый - финансы */
+    --harmony-spirit: 280 100% 70%;    /* Светло-фиолетовый - духовность */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Состояния */
+    --harmony-success: 142 76% 36%;
+    --harmony-warning: 38 92% 50%;
+    --harmony-error: 0 84% 60%;
+    --harmony-info: 217 91% 60%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Стеклянные эффекты */
+    --glass-bg: 210 20% 98% / 0.8;
+    --glass-bg-strong: 210 20% 98% / 0.95;
+    --glass-border: 220 13% 91% / 0.2;
+    --glass-shadow: 220 9% 46% / 0.1;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Градиенты для создания глубины */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--harmony-primary-400)), hsl(var(--harmony-primary-600)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--harmony-secondary-400)), hsl(var(--harmony-secondary-600)));
+    --gradient-glass: linear-gradient(135deg, hsl(var(--glass-bg)), hsl(var(--glass-bg-strong)));
+    --gradient-balance: conic-gradient(
+      hsl(var(--harmony-work)) 0deg 45deg,
+      hsl(var(--harmony-health)) 45deg 90deg,
+      hsl(var(--harmony-relationships)) 90deg 135deg,
+      hsl(var(--harmony-growth)) 135deg 180deg,
+      hsl(var(--harmony-hobby)) 180deg 225deg,
+      hsl(var(--harmony-rest)) 225deg 270deg,
+      hsl(var(--harmony-finance)) 270deg 315deg,
+      hsl(var(--harmony-spirit)) 315deg 360deg
+    );
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Тени для стеклянного эффекта */
+    --shadow-glass: 0 8px 32px hsl(var(--glass-shadow));
+    --shadow-glass-hover: 0 16px 64px hsl(var(--glass-shadow));
+    --shadow-inner: inset 0 1px 0 hsl(var(--harmony-neutral-100));
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Размытие для стеклянного эффекта */
+    --blur-glass: 16px;
+    --blur-glass-strong: 24px;
 
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Переопределение стандартных переменных */
+    --background: var(--harmony-neutral-50);
+    --foreground: var(--harmony-neutral-900);
+    --card: var(--glass-bg);
+    --card-foreground: var(--harmony-neutral-800);
+    --popover: var(--glass-bg-strong);
+    --popover-foreground: var(--harmony-neutral-800);
+    --primary: var(--harmony-primary-600);
+    --primary-foreground: var(--harmony-neutral-50);
+    --secondary: var(--harmony-secondary-100);
+    --secondary-foreground: var(--harmony-secondary-900);
+    --muted: var(--harmony-neutral-100);
+    --muted-foreground: var(--harmony-neutral-500);
+    --accent: var(--harmony-primary-100);
+    --accent-foreground: var(--harmony-primary-800);
+    --destructive: var(--harmony-error);
+    --destructive-foreground: var(--harmony-neutral-50);
+    --border: var(--glass-border);
+    --input: var(--glass-bg);
+    --ring: var(--harmony-primary-400);
+    --radius: 1rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --harmony-neutral-50: 221 39% 11%;
+    --harmony-neutral-100: 215 28% 17%;
+    --harmony-neutral-200: 217 19% 27%;
+    --harmony-neutral-300: 215 14% 34%;
+    --harmony-neutral-400: 220 9% 46%;
+    --harmony-neutral-500: 218 11% 65%;
+    --harmony-neutral-600: 216 12% 84%;
+    --harmony-neutral-700: 220 13% 91%;
+    --harmony-neutral-800: 220 14% 96%;
+    --harmony-neutral-900: 210 20% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --glass-bg: 221 39% 11% / 0.8;
+    --glass-bg-strong: 221 39% 11% / 0.95;
+    --glass-border: 220 13% 91% / 0.1;
+    --glass-shadow: 220 9% 46% / 0.2;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: var(--harmony-neutral-50);
+    --foreground: var(--harmony-neutral-900);
+    --card: var(--glass-bg);
+    --card-foreground: var(--harmony-neutral-800);
+    --popover: var(--glass-bg-strong);
+    --popover-foreground: var(--harmony-neutral-800);
+    --primary: var(--harmony-primary-400);
+    --primary-foreground: var(--harmony-neutral-50);
+    --secondary: var(--harmony-secondary-800);
+    --secondary-foreground: var(--harmony-secondary-100);
+    --muted: var(--harmony-neutral-200);
+    --muted-foreground: var(--harmony-neutral-600);
+    --accent: var(--harmony-primary-800);
+    --accent-foreground: var(--harmony-primary-100);
+    --destructive: var(--harmony-error);
+    --destructive-foreground: var(--harmony-neutral-50);
+    --border: var(--glass-border);
+    --input: var(--glass-bg);
+    --ring: var(--harmony-primary-400);
   }
 }
 
@@ -100,6 +157,126 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter;
+    background: linear-gradient(135deg, hsl(var(--harmony-neutral-50)) 0%, hsl(var(--harmony-primary-50)) 100%);
+    min-height: 100vh;
+  }
+
+  /* Стеклянные компоненты */
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--blur-glass));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-strong {
+    background: hsl(var(--glass-bg-strong));
+    backdrop-filter: blur(var(--blur-glass-strong));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-hover:hover {
+    box-shadow: var(--shadow-glass-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Анимации для плавности */
+  .animate-glass {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-balance {
+    animation: balance-pulse 3s ease-in-out infinite;
+  }
+
+  /* Особые эффекты для баланса жизни */
+  .balance-indicator {
+    background: var(--gradient-balance);
+    border-radius: 50%;
+    position: relative;
+  }
+
+  .balance-indicator::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: hsl(var(--background));
+    border-radius: 50%;
+  }
+}
+
+@layer components {
+  /* Компоненты кнопок с вариантами */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply glass text-primary-foreground hover:glass-hover;
+    background: var(--gradient-primary);
+  }
+
+  .btn-secondary {
+    @apply glass text-card-foreground hover:glass-hover;
+  }
+
+  .btn-ghost {
+    @apply hover:bg-accent hover:text-accent-foreground transition-colors;
+  }
+
+  /* Карточки с стеклянным эффектом */
+  .card-glass {
+    @apply glass animate-glass rounded-2xl p-6;
+  }
+
+  .card-glass-hover {
+    @apply card-glass glass-hover cursor-pointer;
+  }
+
+  /* Специальные утилиты для сфер жизни */
+  .sphere-work { @apply text-[hsl(var(--harmony-work))] bg-[hsl(var(--harmony-work))]/10; }
+  .sphere-health { @apply text-[hsl(var(--harmony-health))] bg-[hsl(var(--harmony-health))]/10; }
+  .sphere-relationships { @apply text-[hsl(var(--harmony-relationships))] bg-[hsl(var(--harmony-relationships))]/10; }
+  .sphere-growth { @apply text-[hsl(var(--harmony-growth))] bg-[hsl(var(--harmony-growth))]/10; }
+  .sphere-hobby { @apply text-[hsl(var(--harmony-hobby))] bg-[hsl(var(--harmony-hobby))]/10; }
+  .sphere-rest { @apply text-[hsl(var(--harmony-rest))] bg-[hsl(var(--harmony-rest))]/10; }
+  .sphere-finance { @apply text-[hsl(var(--harmony-finance))] bg-[hsl(var(--harmony-finance))]/10; }
+  .sphere-spirit { @apply text-[hsl(var(--harmony-spirit))] bg-[hsl(var(--harmony-spirit))]/10; }
+}
+
+@layer utilities {
+  /* Утилиты для стеклянных эффектов */
+  .backdrop-blur-glass {
+    backdrop-filter: blur(var(--blur-glass));
+  }
+
+  .backdrop-blur-glass-strong {
+    backdrop-filter: blur(var(--blur-glass-strong));
+  }
+
+  /* Анимации */
+  @keyframes balance-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes glow {
+    0%, 100% { box-shadow: var(--shadow-glass); }
+    50% { box-shadow: var(--shadow-glass-hover); }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 4s ease-in-out infinite;
   }
 }
