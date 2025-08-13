@@ -51,7 +51,15 @@ const currentGoals: Goal[] = [
   }
 ];
 
-export const ProgressOverview: React.FC = () => {
+import { useUserPreferences } from '@/context/UserPreferencesContext';
+
+export const ProgressOverview = React.memo(() => {
+  const { hideAnxietyElements, isPowerSavingMode } = useUserPreferences();
+
+  if (hideAnxietyElements) {
+    return null; // Скрываем весь компонент, если включена опция
+  }
+
   const averageProgress = Math.round(
     currentGoals.reduce((sum, goal) => sum + goal.progress, 0) / currentGoals.length
   );
@@ -87,7 +95,7 @@ export const ProgressOverview: React.FC = () => {
           
           <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
             <div 
-              className={`h-full transition-all duration-500 ease-out ${getProgressBg(averageProgress)}`}
+              className={`h-full ${isPowerSavingMode ? '' : 'transition-all duration-500 ease-out'} ${getProgressBg(averageProgress)}`}
               style={{ width: `${averageProgress}%` }}
             />
           </div>
@@ -119,7 +127,7 @@ export const ProgressOverview: React.FC = () => {
                 
                 <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                   <div 
-                    className={`h-full transition-all duration-500 ease-out ${getProgressBg(goal.progress)}`}
+                    className={`h-full ${isPowerSavingMode ? '' : 'transition-all duration-500 ease-out'} ${getProgressBg(goal.progress)}`}
                     style={{ width: `${goal.progress}%` }}
                   />
                 </div>
@@ -159,4 +167,4 @@ export const ProgressOverview: React.FC = () => {
       </Button>
     </div>
   );
-};
+});

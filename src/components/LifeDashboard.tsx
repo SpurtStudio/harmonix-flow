@@ -7,12 +7,13 @@ import { TodaysFocus } from './TodaysFocus';
 import { UpcomingTasks } from './UpcomingTasks';
 import { ProgressOverview } from './ProgressOverview';
 import { Sparkles, Calendar, Target, Book } from 'lucide-react';
+import HelpTooltip from './HelpTooltip';
 
 interface LifeDashboardProps {
   userName?: string;
 }
 
-export const LifeDashboard: React.FC<LifeDashboardProps> = ({ userName = "Друг" }) => {
+export const LifeDashboard = React.memo(({ userName = "Друг" }: LifeDashboardProps) => {
   const currentTime = new Date().getHours();
   const getGreeting = () => {
     if (currentTime < 12) return "Доброе утро";
@@ -42,9 +43,11 @@ export const LifeDashboard: React.FC<LifeDashboardProps> = ({ userName = "Дру
         <div className="lg:col-span-1 space-y-6">
           <Card className="card-glass p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-space font-semibold text-foreground">
-                Баланс жизни
-              </h2>
+              <HelpTooltip content="Визуализация вашего баланса по 8 сферам жизни.">
+                <h2 className="text-xl font-space font-semibold text-foreground">
+                  Баланс жизни
+                </h2>
+              </HelpTooltip>
               <div className="w-3 h-3 rounded-full bg-harmony-health animate-pulse" />
             </div>
             <LifeBalanceRadar />
@@ -66,9 +69,11 @@ export const LifeDashboard: React.FC<LifeDashboardProps> = ({ userName = "Дру
           <Card className="card-glass p-6">
             <div className="flex items-center gap-3 mb-6">
               <Calendar className="w-5 h-5 text-harmony-work" />
-              <h2 className="text-xl font-space font-semibold text-foreground">
-                Фокус дня
-              </h2>
+              <HelpTooltip content="Ваши основные задачи и приоритеты на сегодня.">
+                <h2 className="text-xl font-space font-semibold text-foreground">
+                  Фокус дня
+                </h2>
+              </HelpTooltip>
             </div>
             <TodaysFocus />
           </Card>
@@ -124,4 +129,4 @@ export const LifeDashboard: React.FC<LifeDashboardProps> = ({ userName = "Дру
       </Card>
     </div>
   );
-};
+});

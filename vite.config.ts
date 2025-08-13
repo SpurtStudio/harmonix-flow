@@ -19,4 +19,17 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    minify: mode === 'production' ? 'terser' : false,
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+      mangle: true, // Включить обфускацию имен переменных и функций
+      format: {
+        comments: false, // Удалить комментарии
+      },
+    },
+  },
 }));

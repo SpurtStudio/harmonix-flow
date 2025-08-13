@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Settings as SettingsIcon, Shield, Bell, Palette, Globe, Database, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings as SettingsIcon, Shield, Bell, Palette, Globe, Database, Zap, Moon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,48 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { useUserPreferences } from '@/context/UserPreferencesContext';
+import { startSync, stopSync } from '@/lib/sync';
+import { db } from '@/lib/db';
 
 export default function Settings() {
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
   const [localMode, setLocalMode] = useState(true);
+  const {
+    isBeginnerMode,
+    toggleBeginnerMode,
+    isLowMood,
+    setLowMood,
+    isPowerSavingMode,
+    togglePowerSavingMode,
+    hideAnxietyElements,
+    toggleHideAnxietyElements,
+  } = useUserPreferences();
+
+  const [darkMode, setDarkMode] = useState(document.documentElement.classList.contains('dark'));
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  const handleClearLocalData = async () => {
+    if (window.confirm('Вы уверены, что хотите очистить все локальные данные? Это действие необратимо.')) {
+      try {
+        await db.delete();
+        localStorage.clear();
+        alert('Все локальные данные успешно очищены. Приложение будет перезагружено.');
+        window.location.reload();
+      } catch (error) {
+        console.error('Ошибка при очистке локальных данных:', error);
+        alert('Произошла ошибка при очистке данных. Пожалуйста, попробуйте снова.');
+      }
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -36,6 +73,8 @@ export default function Settings() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
+          <h2 className="text-2xl font-semibold text-foreground">Общие настройки</h2>
+          <Separator />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Appearance */}
             <Card className="backdrop-blur-xl bg-surface/80 border-primary/20">
@@ -53,7 +92,7 @@ export default function Settings() {
                       Переключить на темный режим
                     </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={darkMode}
                     onCheckedChange={setDarkMode}
                   />
@@ -85,6 +124,66 @@ export default function Settings() {
                       <SelectItem value="ekb">Екатеринбург (UTC+5)</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Display Settings */}
+            <Card className="backdrop-blur-xl bg-surface/80 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <SettingsIcon className="h-5 w-5" />
+                  Настройки отображения
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Режим новичка</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Включает дополнительные подсказки и упрощенный интерфейс
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isBeginnerMode}
+                    onCheckedChange={toggleBeginnerMode}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Режим низкого настроения</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Активирует более спокойную цветовую схему и скрывает тревожные элементы
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isLowMood}
+                    onCheckedChange={setLowMood}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Режим энергосбережения</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Отключает анимации для экономии заряда батареи
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isPowerSavingMode}
+                    onCheckedChange={togglePowerSavingMode}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Скрыть тревожные элементы</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Скрывает индикаторы прогресса и счетчики задач
+                    </p>
+                  </div>
+                  <Switch
+                    checked={hideAnxietyElements}
+                    onCheckedChange={toggleHideAnxietyElements}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -128,6 +227,8 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="privacy" className="space-y-6">
+          <h2 className="text-2xl font-semibold text-foreground">Приватность и безопасность</h2>
+          <Separator />
           <Card className="backdrop-blur-xl bg-surface/80 border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -144,14 +245,14 @@ export default function Settings() {
                       {localMode ? 'Локальный режим' : 'Облачный режим'}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {localMode 
+                      {localMode
                         ? 'Все данные хранятся на вашем устройстве'
                         : 'Данные синхронизируются с облаком'
                       }
                     </p>
                   </div>
                 </div>
-                <Switch 
+                <Switch
                   checked={localMode}
                   onCheckedChange={setLocalMode}
                 />
@@ -205,6 +306,8 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
+          <h2 className="text-2xl font-semibold text-foreground">Уведомления</h2>
+          <Separator />
           <Card className="backdrop-blur-xl bg-surface/80 border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -220,7 +323,7 @@ export default function Settings() {
                     Общий переключатель для всех уведомлений
                   </p>
                 </div>
-                <Switch 
+                <Switch
                   checked={notifications}
                   onCheckedChange={setNotifications}
                 />
@@ -276,6 +379,8 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="ai" className="space-y-6">
+          <h2 className="text-2xl font-semibold text-foreground">ИИ-помощник</h2>
+          <Separator />
           <Card className="backdrop-blur-xl bg-surface/80 border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -346,6 +451,8 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="data" className="space-y-6">
+          <h2 className="text-2xl font-semibold text-foreground">Управление данными</h2>
+          <Separator />
           <Card className="backdrop-blur-xl bg-surface/80 border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -395,6 +502,10 @@ export default function Settings() {
                     Недоступно
                   </Badge>
                 </div>
+
+                <Button onClick={startSync} className="w-full">
+                  Начать синхронизацию (заглушка)
+                </Button>
               </div>
 
               <div className="pt-4 border-t border-border/30 space-y-3">
@@ -404,7 +515,7 @@ export default function Settings() {
                 <Button variant="outline" className="w-full">
                   Импорт данных
                 </Button>
-                <Button variant="destructive" className="w-full">
+                <Button variant="destructive" className="w-full" onClick={handleClearLocalData}>
                   Очистить все данные
                 </Button>
               </div>

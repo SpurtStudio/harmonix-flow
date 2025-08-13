@@ -10,6 +10,8 @@ import {
   DollarSign, 
   Sparkles 
 } from 'lucide-react';
+import { db } from '@/lib/db';
+import { getLifeBalanceRecommendations } from '@/lib/ai';
 
 interface LifeSphere {
   id: string;
@@ -20,77 +22,145 @@ interface LifeSphere {
   description: string;
 }
 
-const lifeSpheres: LifeSphere[] = [
-  {
-    id: 'work',
-    name: 'Работа',
-    icon: Briefcase,
-    value: 75,
-    color: 'harmony-work',
-    description: 'Карьера и профессиональное развитие'
-  },
-  {
-    id: 'health',
-    name: 'Здоровье',
-    icon: Heart,
-    value: 60,
-    color: 'harmony-health',
-    description: 'Физическое и ментальное здоровье'
-  },
-  {
-    id: 'relationships',
-    name: 'Отношения',
-    icon: Users,
-    value: 80,
-    color: 'harmony-relationships',
-    description: 'Семья, друзья, социальные связи'
-  },
-  {
-    id: 'growth',
-    name: 'Развитие',
-    icon: BookOpen,
-    value: 65,
-    color: 'harmony-growth',
-    description: 'Обучение и личностный рост'
-  },
-  {
-    id: 'hobby',
-    name: 'Хобби',
-    icon: Palette,
-    value: 45,
-    color: 'harmony-hobby',
-    description: 'Творчество и увлечения'
-  },
-  {
-    id: 'rest',
-    name: 'Отдых',
-    icon: Moon,
-    value: 55,
-    color: 'harmony-rest',
-    description: 'Релаксация и восстановление'
-  },
-  {
-    id: 'finance',
-    name: 'Финансы',
-    icon: DollarSign,
-    value: 70,
-    color: 'harmony-finance',
-    description: 'Финансовое планирование'
-  },
-  {
-    id: 'spirit',
-    name: 'Духовность',
-    icon: Sparkles,
-    value: 50,
-    color: 'harmony-spirit',
-    description: 'Саморефлексия и смысл жизни'
-  }
-];
+interface LifeBalanceRadarProps {
+  onDataLoaded?: (data: LifeSphere[]) => void;
+}
 
-export const LifeBalanceRadar: React.FC = () => {
-  const averageBalance = Math.round(
-    lifeSpheres.reduce((sum, sphere) => sum + sphere.value, 0) / lifeSpheres.length
-  );
+export const LifeBalanceRadar: React.FC<LifeBalanceRadarProps> = ({ onDataLoaded }) => {
+  const [lifeSpheres, setLifeSpheres] = React.useState<LifeSphere[]>([
+    {
+      id: 'work',
+      name: 'Работа',
+      icon: Briefcase,
+      value: 0,
+      color: 'harmony-work',
+      description: 'Карьера и профессиональное развитие'
+    },
+    {
+      id: 'health',
+      name: 'Здоровье',
+      icon: Heart,
+      value: 0,
+      color: 'harmony-health',
+      description: 'Физическое и ментальное здоровье'
+    },
+    {
+      id: 'relationships',
+      name: 'Отношения',
+      icon: Users,
+      value: 0,
+      color: 'harmony-relationships',
+      description: 'Семья, друзья, социальные связи'
+    },
+    {
+      id: 'growth',
+      name: 'Развитие',
+      icon: BookOpen,
+      value: 0,
+      color: 'harmony-growth',
+      description: 'Обучение и личностный рост'
+    },
+    {
+      id: 'hobby',
+      name: 'Хобби',
+      icon: Palette,
+      value: 0,
+      color: 'harmony-hobby',
+      description: 'Творчество и увлечения'
+    },
+    {
+      id: 'rest',
+      name: 'Отдых',
+      icon: Moon,
+      value: 0,
+      color: 'harmony-rest',
+      description: 'Релаксация и восстановление'
+    },
+    {
+      id: 'finance',
+      name: 'Финансы',
+      icon: DollarSign,
+      value: 0,
+      color: 'harmony-finance',
+      description: 'Финансовое планирование'
+    },
+    {
+      id: 'spirit',
+      name: 'Духовность',
+      icon: Sparkles,
+      value: 0,
+      color: 'harmony-spirit',
+      description: 'Саморефлексия и смысл жизни'
+    }
+  ]);
+  const [averageBalance, setAverageBalance] = React.useState(0);
+  const [aiRecommendation, setAiRecommendation] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchLifeBalanceData = async () => {
+      try {
+        setLoading(true);
+        
+        // Получаем глобальные цели
+        const globalGoals = await db.getAllGlobalGoals();
+        
+        // Подсчитываем прогресс по сферам жизни
+        const sphereProgress: Record<string, { total: number; count: number }> = {};
+        
+        globalGoals.forEach(goal => {
+          if (goal.lifeSphere) {
+            if (!sphereProgress[goal.lifeSphere]) {
+              sphereProgress[goal.lifeSphere] = { total: 0, count: 0 };
+            }
+            sphereProgress[goal.lifeSphere].total += goal.progress;
+            sphereProgress[goal.lifeSphere].count += 1;
+          }
+        });
+        
+        // Обновляем значения сфер жизни
+        const updatedSpheres = lifeSpheres.map(sphere => {
+          const progressData = sphereProgress[sphere.id];
+          const value = progressData 
+            ? Math.round(progressData.total / progressData.count)
+            : 0;
+            
+          return {
+            ...sphere,
+            value
+          };
+        });
+        
+        setLifeSpheres(updatedSpheres);
+        
+        // Вычисляем средний баланс
+        const average = Math.round(
+          updatedSpheres.reduce((sum, sphere) => sum + sphere.value, 0) / updatedSpheres.length
+        );
+        setAverageBalance(average);
+        
+        // Вызываем callback при необходимости
+        if (onDataLoaded) {
+          onDataLoaded(updatedSpheres);
+        }
+        
+        // Получаем рекомендацию от ИИ
+        const sphereValues: Record<string, number> = {};
+        updatedSpheres.forEach(sphere => {
+          sphereValues[sphere.id] = sphere.value;
+        });
+        
+        const recommendation = await getLifeBalanceRecommendations(sphereValues);
+        setAiRecommendation(recommendation);
+      } catch (error) {
+        console.error('Ошибка при получении данных баланса жизни:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLifeBalanceData();
+  }, []);
 
   const getBalanceMessage = (balance: number) => {
     if (balance >= 80) return { text: "Отличная гармония!", color: "text-harmony-health" };
@@ -100,6 +170,10 @@ export const LifeBalanceRadar: React.FC = () => {
   };
 
   const balanceMessage = getBalanceMessage(averageBalance);
+
+  if (loading) {
+    return <div>Загрузка данных баланса жизни...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -157,18 +231,19 @@ export const LifeBalanceRadar: React.FC = () => {
       </div>
 
       {/* Рекомендация ИИ */}
-      <div className="glass p-4 rounded-xl border-l-4 border-harmony-spirit">
-        <div className="flex items-start gap-3">
-          <Sparkles className="w-5 h-5 text-harmony-spirit mt-0.5 flex-shrink-0" />
-          <div className="space-y-1">
-            <h4 className="text-sm font-medium text-foreground">Рекомендация ИИ</h4>
-            <p className="text-xs text-muted-foreground">
-              Обратите внимание на сферу "Хобби" - выделите 30 минут сегодня для творчества. 
-              Это поможет восстановить баланс и зарядиться энергией.
-            </p>
+      {aiRecommendation && (
+        <div className="glass p-4 rounded-xl border-l-4 border-harmony-spirit">
+          <div className="flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-harmony-spirit mt-0.5 flex-shrink-0" />
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium text-foreground">Рекомендация ИИ</h4>
+              <p className="text-xs text-muted-foreground">
+                {aiRecommendation.replace('ИИ-рекомендация: ', '')}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
