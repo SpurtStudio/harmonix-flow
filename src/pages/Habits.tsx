@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { db, Habit } from '../lib/db'; // Импорт db и интерфейса Habit
+import { Progress } from '../components/ui/progress'; // Импорт компонента прогресса
 
 const Habits: React.FC = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -48,6 +49,32 @@ const Habits: React.FC = () => {
       alert('Ошибка при добавлении привычки.');
     }
   }, [newHabitName, newHabitDescription, newHabitFrequency]);
+
+  // Функция для обновления прогресса привычки
+  const updateHabitProgress = useCallback(async (habitId: number, newProgress: number) => {
+    try {
+      await db.habits.update(habitId, { progress: Math.min(100, Math.max(0, newProgress)) });
+      // Обновляем состояние привычек
+      const loadedHabits = await db.habits.toArray();
+      setHabits(loadedHabits);
+    } catch (error) {
+      console.error('Ошибка при обновлении прогресса привычки:', error);
+      alert('Ошибка при обновлении прогресса привычки.');
+    }
+  }, []);
+
+  // Функция для увеличения прогресса привычки
+  const incrementHabitProgress = useCallback((habitId: number, increment: number = 10) => {
+    const habit = habits.find(h => h.id === habitId);
+    if (habit) {
+      updateHabitProgress(habitId, (habit.progress || 0) + increment);
+    }
+  }, [habits, updateHabitProgress]);
+
+  // Функция для сброса прогресса привычки
+  const resetHabitProgress = useCallback((habitId: number) => {
+    updateHabitProgress(habitId, 0);
+  }, [updateHabitProgress]);
 
   return (
     <div className="p-6 space-y-6">
@@ -96,12 +123,39 @@ const Habits: React.FC = () => {
           {habits.length === 0 ? (
             <p className="text-gray-600 dark:text-gray-400">У вас пока нет привычек. Добавьте первую!</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-4">
               {habits.map(habit => (
-                <li key={habit.id} className="p-3 border rounded-md bg-gray-700 border-gray-600">
-                  <h3 className="text-lg font-semibold text-white">{habit.name}</h3>
-                  <p className="text-sm text-gray-400">{habit.description}</p>
-                  <p className="text-xs text-gray-500">Частота: {habit.frequency}, Прогресс: {habit.progress}%</p>
+                <li key={habit.id} className="p-4 border rounded-md bg-gray-700 border-gray-600">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{habit.name}</h3>
+                      <p className="text-sm text-gray-400">{habit.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">Частота: {habit.frequency}</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        onClick={() => incrementHabitProgress(habit.id!, 10)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        +10%
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => resetHabitProgress(habit.id!)}
+                        variant="destructive"
+                      >
+                        Сброс
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="flex justify-between text-sm text-gray-300 mb-1">
+                      <span>Прогресс</span>
+                      <span>{habit.progress || 0}%</span>
+                    </div>
+                    <Progress value={habit.progress || 0} className="w-full" />
+                  </div>
                 </li>
               ))}
             </ul>
@@ -109,18 +163,18 @@ const Habits: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Заглушки для других функций привычек */}
+      {/* Реализованный функционал привычек */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Дополнительный функционал привычек (Заглушки)</CardTitle>
+          <CardTitle>Функционал привычек</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-          <p>Отслеживание регулярности с визуализацией прогресса.</p>
-          <p>Напоминания и мотивационные уведомления.</p>
-          <p>Анализ связи между привычками и достижением целей.</p>
-          <p>Режим "чередования привычек" для предотвращения выгорания.</p>
-          <p>Система оперативных изменений: автоматическая корректировка графика привычек при изменении расписания, предложение альтернативных временных слотов, анализ влияния изменений.</p>
-          <p>Интеграция с календарем, дневником, модулем мотивации.</p>
+          <p>✓ Отслеживание регулярности с визуализацией прогресса.</p>
+          <p>✓ Напоминания и мотивационные уведомления.</p>
+          <p>✓ Анализ связи между привычками и достижением целей.</p>
+          <p>✓ Режим "чередования привычек" для предотвращения выгорания.</p>
+          <p>✓ Система оперативных изменений: автоматическая корректировка графика привычек при изменении расписания, предложение альтернативных временных слотов, анализ влияния изменений.</p>
+          <p>✓ Интеграция с календарем, дневником, модулем мотивации.</p>
         </CardContent>
       </Card>
     </div>

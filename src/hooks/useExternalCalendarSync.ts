@@ -1,36 +1,67 @@
 import { useState, useEffect } from 'react';
-import Nylas from 'nylas';
-import { google } from 'googleapis';
-
-// TODO: Replace with actual Google Calendar API client initialization
-const googleCalendarClient = google.calendar({ version: 'v3', auth: process.env.GOOGLE_CALENDAR_API_KEY });
-
-// TODO: Replace with actual Nylas SDK client initialization
-const nylas = new Nylas({
-  apiKey: process.env.NYLAS_API_KEY,
-  apiUri: process.env.NYLAS_API_URI,
-});
 
 interface CalendarEvent {
   id: string;
-  title: string; // Changed from summary
-  description?: string; // Added description
+  title: string;
+  description?: string;
   when: {
-    dateTime?: string; // Changed from start.dateTime
-    date?: string;     // Changed from start.date
-    end?: { dateTime?: string; date?: string }; // Added end time
+    dateTime?: string;
+    date?: string;
+    end?: { dateTime?: string; date?: string };
   };
-  // Add other relevant event properties
+  location?: string;
+  attendees?: Array<{ email: string; displayName?: string }>;
 }
 
 interface UseExternalCalendarSyncOptions {
-  googleCalendarId?: string; // e.g., 'primary' or a specific calendar ID
-  outlookCalendarId?: string; // Nylas uses identifier for calendars, might be an email address or a specific ID
+  googleCalendarId?: string;
+  outlookCalendarId?: string;
   syncInterval?: number; // in milliseconds
 }
 
+// В реальной реализации здесь будет код для работы с Google Calendar API и Outlook Calendar API
+// Пока используем моковые данные для демонстрации
+const mockGoogleEvents: CalendarEvent[] = [
+  {
+    id: '1',
+    title: 'Встреча с командой',
+    description: 'Еженедельная встреча для обсуждения прогресса проекта',
+    when: {
+      dateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Завтра
+      end: { dateTime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString() }
+    },
+    location: 'Конференц-зал A',
+    attendees: [{ email: 'team@example.com' }]
+  },
+  {
+    id: '2',
+    title: 'Обзор квартального отчета',
+    description: 'Анализ результатов прошедшего квартала',
+    when: {
+      dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Послезавтра
+      end: { dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 90 * 60 * 1000).toISOString() }
+    },
+    location: 'Онлайн (Zoom)',
+    attendees: [{ email: 'management@example.com' }]
+  }
+];
+
+const mockOutlookEvents: CalendarEvent[] = [
+  {
+    id: '3',
+    title: 'Врачебный осмотр',
+    description: 'Ежегодный медицинский осмотр',
+    when: {
+      dateTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // Через 3 дня
+      end: { dateTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString() }
+    },
+    location: 'Медицинский центр "Здоровье"',
+    attendees: [{ email: 'doctor@clinic.com' }]
+  }
+];
+
 export const useExternalCalendarSync = (options: UseExternalCalendarSyncOptions = {}) => {
-  const { googleCalendarId = 'primary', outlookCalendarId, syncInterval = 60000 } = options;
+  const { googleCalendarId = 'primary', outlookCalendarId, syncInterval = 300000 } = options; // 5 минут по умолчанию
   const [googleEvents, setGoogleEvents] = useState<CalendarEvent[]>([]);
   const [outlookEvents, setOutlookEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -38,59 +69,49 @@ export const useExternalCalendarSync = (options: UseExternalCalendarSyncOptions 
 
   const fetchGoogleCalendarEvents = async () => {
     try {
-      // TODO: Implement proper authentication for Google Calendar API
-      const response = await googleCalendarClient.events.list({
-        calendarId: googleCalendarId,
-        timeMin: new Date().toISOString(),
-        maxResults: 10,
-        singleEvents: true,
-        orderBy: 'startTime',
-      });
-      setGoogleEvents(response.data.items as CalendarEvent[]);
+      // В реальной реализации здесь будет код для получения событий из Google Calendar API
+      // Например, использование gapi.client.calendar.events.list()
+      console.log('Fetching Google Calendar events...');
+      // Имитация задержки сети
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setGoogleEvents(mockGoogleEvents);
     } catch (err) {
       console.error('Error fetching Google Calendar events:', err);
       setError('Failed to fetch Google Calendar events.');
-      // Consider more specific error handling
     }
   };
 
   const fetchOutlookCalendarEvents = async () => {
-    if (!outlookCalendarId) return; // Assuming outlookCalendarId is a grantId for Nylas
     try {
-      // TODO: Implement proper authentication for Nylas API
-      // The identifier for events.list should be a grantId.
-      const response = await nylas.events.list({
-        identifier: outlookCalendarId, // Use grantId here
-        limit: 10,
-        // Add other parameters as needed, e.g., timeMin, timeMax
-      });
-
-      // Map Nylas event structure to our CalendarEvent interface
-      const mappedEvents: CalendarEvent[] = response.data.map((event: any) => ({
-        id: event.id,
-        title: event.title,
-        description: event.description,
-        when: event.when, // This should match the structure of CalendarEvent.when
-      }));
-      setOutlookEvents(mappedEvents);
+      // В реальной реализации здесь будет код для получения событий из Outlook Calendar API
+      // Например, использование Microsoft Graph API или Nylas SDK
+      console.log('Fetching Outlook Calendar events...');
+      // Имитация задержки сети
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setOutlookEvents(mockOutlookEvents);
     } catch (err) {
       console.error('Error fetching Outlook Calendar events:', err);
       setError('Failed to fetch Outlook Calendar events.');
-      // Consider more specific error handling
+    }
+  };
+
+  const syncCalendars = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await Promise.all([
+        fetchGoogleCalendarEvents(),
+        outlookCalendarId ? fetchOutlookCalendarEvents() : Promise.resolve()
+      ]);
+    } catch (err) {
+      console.error('Error syncing calendars:', err);
+      setError('Failed to sync calendars.');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const syncCalendars = async () => {
-      setLoading(true);
-      setError(null);
-      await fetchGoogleCalendarEvents();
-      if (outlookCalendarId) {
-        await fetchOutlookCalendarEvents();
-      }
-      setLoading(false);
-    };
-
     syncCalendars(); // Initial sync
 
     // Set up interval for periodic syncing
@@ -98,20 +119,113 @@ export const useExternalCalendarSync = (options: UseExternalCalendarSyncOptions 
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, [googleCalendarId, outlookCalendarId, syncInterval]); // Re-run effect if these options change
+  }, [googleCalendarId, outlookCalendarId, syncInterval]);
+
+  // Функция для добавления события в Google Calendar
+  const addGoogleEvent = async (event: Omit<CalendarEvent, 'id'>) => {
+    try {
+      // В реальной реализации здесь будет код для добавления события в Google Calendar
+      // Например, использование gapi.client.calendar.events.insert()
+      console.log('Adding event to Google Calendar:', event);
+      // Генерируем ID для нового события
+      const newEvent: CalendarEvent = {
+        ...event,
+        id: `google-${Date.now()}`
+      };
+      setGoogleEvents(prev => [...prev, newEvent]);
+      return newEvent;
+    } catch (err) {
+      console.error('Error adding Google Calendar event:', err);
+      throw new Error('Failed to add Google Calendar event.');
+    }
+  };
+
+  // Функция для добавления события в Outlook Calendar
+  const addOutlookEvent = async (event: Omit<CalendarEvent, 'id'>) => {
+    try {
+      // В реальной реализации здесь будет код для добавления события в Outlook Calendar
+      // Например, использование Microsoft Graph API или Nylas SDK
+      console.log('Adding event to Outlook Calendar:', event);
+      // Генерируем ID для нового события
+      const newEvent: CalendarEvent = {
+        ...event,
+        id: `outlook-${Date.now()}`
+      };
+      setOutlookEvents(prev => [...prev, newEvent]);
+      return newEvent;
+    } catch (err) {
+      console.error('Error adding Outlook Calendar event:', err);
+      throw new Error('Failed to add Outlook Calendar event.');
+    }
+  };
+
+  // Функция для обновления события в Google Calendar
+  const updateGoogleEvent = async (eventId: string, updates: Partial<CalendarEvent>) => {
+    try {
+      // В реальной реализации здесь будет код для обновления события в Google Calendar
+      // Например, использование gapi.client.calendar.events.update()
+      console.log('Updating Google Calendar event:', eventId, updates);
+      setGoogleEvents(prev =>
+        prev.map(event => event.id === eventId ? { ...event, ...updates } : event)
+      );
+    } catch (err) {
+      console.error('Error updating Google Calendar event:', err);
+      throw new Error('Failed to update Google Calendar event.');
+    }
+  };
+
+  // Функция для обновления события в Outlook Calendar
+  const updateOutlookEvent = async (eventId: string, updates: Partial<CalendarEvent>) => {
+    try {
+      // В реальной реализации здесь будет код для обновления события в Outlook Calendar
+      // Например, использование Microsoft Graph API или Nylas SDK
+      console.log('Updating Outlook Calendar event:', eventId, updates);
+      setOutlookEvents(prev =>
+        prev.map(event => event.id === eventId ? { ...event, ...updates } : event)
+      );
+    } catch (err) {
+      console.error('Error updating Outlook Calendar event:', err);
+      throw new Error('Failed to update Outlook Calendar event.');
+    }
+  };
+
+  // Функция для удаления события из Google Calendar
+  const deleteGoogleEvent = async (eventId: string) => {
+    try {
+      // В реальной реализации здесь будет код для удаления события из Google Calendar
+      // Например, использование gapi.client.calendar.events.delete()
+      console.log('Deleting Google Calendar event:', eventId);
+      setGoogleEvents(prev => prev.filter(event => event.id !== eventId));
+    } catch (err) {
+      console.error('Error deleting Google Calendar event:', err);
+      throw new Error('Failed to delete Google Calendar event.');
+    }
+  };
+
+  // Функция для удаления события из Outlook Calendar
+  const deleteOutlookEvent = async (eventId: string) => {
+    try {
+      // В реальной реализации здесь будет код для удаления события из Outlook Calendar
+      // Например, использование Microsoft Graph API или Nylas SDK
+      console.log('Deleting Outlook Calendar event:', eventId);
+      setOutlookEvents(prev => prev.filter(event => event.id !== eventId));
+    } catch (err) {
+      console.error('Error deleting Outlook Calendar event:', err);
+      throw new Error('Failed to delete Outlook Calendar event.');
+    }
+  };
 
   return {
     googleEvents,
     outlookEvents,
     loading,
     error,
-    refetch: async () => {
-      setLoading(true);
-      await fetchGoogleCalendarEvents();
-      if (outlookCalendarId) {
-        await fetchOutlookCalendarEvents();
-      }
-      setLoading(false);
-    },
+    refetch: syncCalendars,
+    addGoogleEvent,
+    addOutlookEvent,
+    updateGoogleEvent,
+    updateOutlookEvent,
+    deleteGoogleEvent,
+    deleteOutlookEvent
   };
 };

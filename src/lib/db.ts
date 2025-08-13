@@ -36,6 +36,8 @@ export interface Project {
   subProjectLevel1Ids?: number[];
   taskIds?: number[];
   resourceEstimation: string;
+  progress?: number; // Прогресс проекта в процентах
+  taskCount?: number; // Количество задач в проекте
 }
 
 export interface SubProjectLevel1 {
@@ -69,6 +71,9 @@ export interface Task {
   status: string;
   dueDate?: Date; // Срок выполнения задачи
   category?: string; // Категория задачи (сфера жизни)
+  projectId?: number; // Связь с проектом
+  relatedTaskId?: number; // Связь с родительской задачей
+  assignedTo?: string; // Ответственный за задачу
 }
 
 export interface SubTask {

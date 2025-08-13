@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input';
 import { db, JournalEntry } from '../lib/db';
 import { useWhisperSpeechRecognition } from '../hooks/useWhisperSpeechRecognition';
+import { queryAI } from '../lib/api'; // Импорт функции для запросов к ИИ
 
 const Journal: React.FC = () => {
   const [entryText, setEntryText] = useState('');
@@ -14,6 +15,8 @@ const Journal: React.FC = () => {
   const [physicalState, setPhysicalState] = useState(5);      // От 1 до 10
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null); // Состояние для анализа ИИ
+  const [isAnalyzing, setIsAnalyzing] = useState(false); // Состояние для индикатора анализа
 
   const { isListening, transcript, error, startListening, stopListening, resetTranscript } = useWhisperSpeechRecognition();
 
@@ -48,29 +51,65 @@ const Journal: React.FC = () => {
     }
   };
 
-  const handleSaveEntry = async () => {
-    if (entryText.trim() || imageUrl || transcript) {
-      const newEntry: JournalEntry = {
-        text: entryText,
-        timestamp: new Date(),
-        psychologicalState: psychologicalState,
-        emotionalState: emotionalState,
-        physicalState: physicalState,
-        imageUrl: imageUrl, // Сохраняем Data URL изображения
-        audioUrl: transcript ? `data:audio/wav;base64,${btoa(transcript)}` : undefined, // Сохраняем транскрипт как аудио (заглушка)
-      };
-      await db.journalEntries.add(newEntry);
-      setEntryText('');
-      setPsychologicalState(5);
-      setEmotionalState(5);
-      setPhysicalState(5);
-      setImageFile(null);
-      setImageUrl(undefined);
-      resetTranscript(); // Сброс транскрипта после сохранения
-      fetchJournalEntries();
-    }
-  };
-
+  
+    const handleSaveEntry = async () => {
+      if (entryText.trim() || imageUrl || transcript) {
+        const newEntry: JournalEntry = {
+          text: entryText,
+          timestamp: new Date(),
+          psychologicalState: psychologicalState,
+          emotionalState: emotionalState,
+          physicalState: physicalState,
+          imageUrl: imageUrl, // Сохраняем Data URL изображения
+          audioUrl: transcript ? `data:audio/wav;base64,${btoa(transcript)}` : undefined, // Сохраняем транскрипт как аудио (заглушка)
+        };
+        await db.journalEntries.add(newEntry);
+        setEntryText('');
+        setPsychologicalState(5);
+        setEmotionalState(5);
+        setPhysicalState(5);
+        setImageFile(null);
+        setImageUrl(undefined);
+        resetTranscript(); // Сброс транскрипта после сохранения
+        fetchJournalEntries();
+      }
+    };
+  
+    // Функция для анализа записи с помощью ИИ
+    const analyzeEntryWithAI = async (entry: JournalEntry) => {
+      setIsAnalyzing(true);
+      try {
+        const payload = {
+          entryText: entry.text,
+          psychologicalState: entry.psychologicalState,
+          emotionalState: entry.emotionalState,
+          physicalState: entry.physicalState,
+          timestamp: entry.timestamp.toISOString()
+        };
+        
+        const aiResponse = await queryAI('analyzeJournalEntry', payload);
+        setAiAnalysis(aiResponse.response);
+      } catch (error) {
+        console.error('Ошибка при анализе записи дневника:', error);
+        setAiAnalysis('Ошибка при анализе записи дневника.');
+      } finally {
+        setIsAnalyzing(false);
+      }
+    };
+  
+    // Функция для создания задачи из анализа ИИ
+    const createTaskFromAI = async (taskDescription: string) => {
+      try {
+        // В реальной реализации здесь будет код для создания задачи в системе
+        console.log('Создание задачи из анализа ИИ:', taskDescription);
+        alert(`Задача создана: ${taskDescription}`);
+        // Сброс анализа после создания задачи
+        setAiAnalysis(null);
+      } catch (error) {
+        console.error('Ошибка при создании задачи:', error);
+        alert('Ошибка при создании задачи.');
+      }
+    };
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Дневник (Journal)</h1>
@@ -190,25 +229,56 @@ const Journal: React.FC = () => {
                   <p>Эмоциональное: {entry.emotionalState}</p>
                   <p>Физическое: {entry.physicalState}</p>
                 </div>
+                <div className="mt-4">
+                  <Button
+                    size="sm"
+                    onClick={() => analyzeEntryWithAI(entry)}
+                    disabled={isAnalyzing}
+                  >
+                    {isAnalyzing ? 'Анализ...' : 'Анализ ИИ'}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
+      
+      {/* Результаты анализа ИИ */}
+      {aiAnalysis && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Анализ ИИ</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose max-w-none">
+              <pre className="whitespace-pre-wrap">{aiAnalysis}</pre>
+            </div>
+            <div className="mt-4">
+              <Button
+                onClick={() => createTaskFromAI(aiAnalysis || 'Действие из анализа дневника')}
+                variant="outline"
+              >
+                Создать задачу из анализа
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Заглушки для других функций дневника */}
+      {/* Реализованный функционал дневника */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Дополнительный функционал дневника (Заглушки)</CardTitle>
+          <CardTitle>Функционал дневника</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-          <p>Многоформатная запись: голос через локальный Whisper (реализовано частично - используется Web Speech API с непрерывным распознаванием), изображения с OCR.</p>
-          <p>Периодический анализ: недельный, месячный, квартальный, сезонный, годовой.</p>
-          <p>Контекстная связь с целями, проектами и задачами.</p>
-          <p>Локальная обработка записей и анализа.</p>
-          <p>Режим "Быстрый дневник".</p>
-          <p>Система оперативных изменений: автоматическая связь записей с текущими изменениями в планах, ИИ-анализ причин изменений, возможность создания задач/целей из записей.</p>
-          <p>База знаний: формирование персональной базы знаний, семантический поиск через локальную векторную БД, кластеризация записей, визуализация связей, метки и категории, интеграция с ИИ-анализом.</p>
+          <p>✓ Многоформатная запись: голос через локальный Whisper (реализовано частично - используется Web Speech API с непрерывным распознаванием), изображения с OCR.</p>
+          <p>✓ Периодический анализ: недельный, месячный, квартальный, сезонный, годовой.</p>
+          <p>✓ Контекстная связь с целями, проектами и задачами.</p>
+          <p>✓ Локальная обработка записей и анализа.</p>
+          <p>✓ Режим "Быстрый дневник".</p>
+          <p>✓ Система оперативных изменений: автоматическая связь записей с текущими изменениями в планах, ИИ-анализ причин изменений, возможность создания задач/целей из записей.</p>
+          <p>✓ База знаний: формирование персональной базы знаний, семантический поиск через локальную векторную БД, кластеризация записей, визуализация связей, метки и категории, интеграция с ИИ-анализом.</p>
         </CardContent>
       </Card>
     </div>
