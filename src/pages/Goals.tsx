@@ -1,32 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { Badge } from '../components/ui/badge';
-import { Slider } from '../components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import HelpTooltip from '../components/HelpTooltip';
-import { Plus, Target, TrendingUp, Eye, Award, Clock, Lightbulb } from 'lucide-react';
-import { db } from '../lib/db';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Plus } from 'lucide-react';
 
 const Goals: React.FC = () => {
   const [vision, setVision] = useState('');
-  const [globalGoals, setGlobalGoals] = useState<any[]>([]);
-  const [strategicGoals, setStrategicGoals] = useState<any[]>([]);
-  const [quarterlyOkrs, setQuarterlyOkrs] = useState<any[]>([]);
   const [isAddingGoal, setIsAddingGoal] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalDescription, setNewGoalDescription] = useState('');
-  const [newGoalKrs, setNewGoalKrs] = useState<string[]>(['']);
-  const [newGoalImageUrl, setNewGoalImageUrl] = useState('');
-  const [newGoalBalanceScore, setNewGoalBalanceScore] = useState(5);
-  const [newGoalProgress, setNewGoalProgress] = useState(0);
-  const [newGoalImpactOnBalance, setNewGoalImpactOnBalance] = useState(5);
-  const [newGoalPriority, setNewGoalPriority] = useState(5);
-  const [newGoalLifeSphere, setNewGoalLifeSphere] = useState('work');
 
   return (
     <div className="p-6 space-y-6">
