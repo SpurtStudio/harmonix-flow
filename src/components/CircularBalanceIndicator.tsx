@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import {
+  Briefcase,
+  Heart,
+  Users2,
+  GraduationCap,
+  Paintbrush,
+  Bed,
+  Landmark,
+  Sparkles
+} from 'lucide-react';
 
 interface LifeSphere {
   id: string;
@@ -9,17 +19,18 @@ interface LifeSphere {
   value: number;
   color: string;
   angle: number;
+  icon: React.ElementType;
 }
 
 const lifeSpheres: LifeSphere[] = [
-  { id: 'work', name: 'Работа', route: '/work', value: 7, color: 'harmony-work', angle: 0 },
-  { id: 'health', name: 'Здоровье', route: '/health', value: 8, color: 'harmony-health', angle: 45 },
-  { id: 'relationships', name: 'Отношения', route: '/family-friends', value: 6, color: 'harmony-relationships', angle: 90 },
-  { id: 'development', name: 'Развитие', route: '/development', value: 7, color: 'harmony-growth', angle: 135 },
-  { id: 'hobbies', name: 'Хобби', route: '/hobbies', value: 5, color: 'harmony-hobbies', angle: 180 },
-  { id: 'rest', name: 'Отдых', route: '/rest', value: 6, color: 'harmony-rest', angle: 225 },
-  { id: 'finance', name: 'Финансы', route: '/finance', value: 7, color: 'harmony-finance', angle: 270 },
-  { id: 'spirituality', name: 'Духовность', route: '/spirituality', value: 8, color: 'harmony-spirit', angle: 315 }
+  { id: 'work', name: 'Работа', route: '/work', value: 75, color: 'harmony-work', angle: 0, icon: Briefcase },
+  { id: 'health', name: 'Здоровье', route: '/health', value: 80, color: 'harmony-health', angle: 45, icon: Heart },
+  { id: 'relationships', name: 'Отношения', route: '/family-friends', value: 65, color: 'harmony-relationships', angle: 90, icon: Users2 },
+  { id: 'development', name: 'Развитие', route: '/development', value: 70, color: 'harmony-growth', angle: 135, icon: GraduationCap },
+  { id: 'hobbies', name: 'Хобби', route: '/hobbies', value: 60, color: 'harmony-hobbies', angle: 180, icon: Paintbrush },
+  { id: 'rest', name: 'Отдых', route: '/rest', value: 55, color: 'harmony-rest', angle: 225, icon: Bed },
+  { id: 'finance', name: 'Финансы', route: '/finance', value: 85, color: 'harmony-finance', angle: 270, icon: Landmark },
+  { id: 'spirituality', name: 'Духовность', route: '/spirituality', value: 70, color: 'harmony-spirit', angle: 315, icon: Sparkles }
 ];
 
 const CircularBalanceIndicator: React.FC = () => {
@@ -27,70 +38,25 @@ const CircularBalanceIndicator: React.FC = () => {
   const [hoveredSphere, setHoveredSphere] = useState<string | null>(null);
   
   const totalBalance = Math.round(lifeSpheres.reduce((sum, sphere) => sum + sphere.value, 0) / lifeSpheres.length);
-  const centerRadius = 120;
-  const sphereRadius = 180;
-  const sphereSize = 50;
+  const centerSize = 140; // Размер центрального индикатора
+  const sphereSize = Math.round(centerSize / 1.5); // Размер сфер в 1.5 раза меньше
+  const sphereRadius = 200; // Расстояние от центра до сфер
 
   const getSpherePosition = (angle: number) => {
     const radian = (angle * Math.PI) / 180;
-    const x = centerRadius + sphereRadius * Math.cos(radian);
-    const y = centerRadius + sphereRadius * Math.sin(radian);
+    const x = 250 + sphereRadius * Math.cos(radian);
+    const y = 250 + sphereRadius * Math.sin(radian);
     return { x: x - sphereSize / 2, y: y - sphereSize / 2 };
-  };
-
-  const createSegmentPath = (startAngle: number, endAngle: number, value: number) => {
-    const maxRadius = 100;
-    const radius = (value / 10) * maxRadius + 20;
-    const startRadian = (startAngle * Math.PI) / 180;
-    const endRadian = (endAngle * Math.PI) / 180;
-    
-    const x1 = centerRadius + radius * Math.cos(startRadian);
-    const y1 = centerRadius + radius * Math.sin(startRadian);
-    const x2 = centerRadius + radius * Math.cos(endRadian);
-    const y2 = centerRadius + radius * Math.sin(endRadian);
-    
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-    
-    return `M ${centerRadius} ${centerRadius} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
   };
 
   return (
     <div className="relative w-full flex justify-center items-center min-h-[500px]">
-      <svg width="480" height="480" className="relative">
-        {/* Центральная окружность баланса - утолщенная в 5 раз */}
+      <svg width="500" height="500" className="absolute">
+        {/* Центральный круг баланса жизни */}
         <circle
-          cx={centerRadius}
-          cy={centerRadius}
-          r="80"
-          fill="none"
-          stroke="hsl(var(--border))"
-          strokeWidth="20"
-          className="opacity-20"
-        />
-        
-        {/* Сегменты баланса */}
-        {lifeSpheres.map((sphere, index) => {
-          const startAngle = sphere.angle - 22.5;
-          const endAngle = sphere.angle + 22.5;
-          const segmentPath = createSegmentPath(startAngle, endAngle, sphere.value);
-          
-          return (
-            <path
-              key={sphere.id}
-              d={segmentPath}
-              fill={`hsl(var(--${sphere.color}))`}
-              className={`opacity-70 transition-all duration-300 ${
-                hoveredSphere === sphere.id ? 'opacity-100' : ''
-              }`}
-            />
-          );
-        })}
-
-        {/* Центральный индикатор общего баланса */}
-        <circle
-          cx={centerRadius}
-          cy={centerRadius}
-          r="60"
+          cx="250"
+          cy="250"
+          r={centerSize / 2}
           fill="hsl(var(--card))"
           stroke="hsl(var(--border))"
           strokeWidth="3"
@@ -98,8 +64,8 @@ const CircularBalanceIndicator: React.FC = () => {
         />
         
         <text
-          x={centerRadius}
-          y={centerRadius - 10}
+          x="250"
+          y="240"
           textAnchor="middle"
           className="text-3xl font-space font-bold fill-foreground"
         >
@@ -107,8 +73,8 @@ const CircularBalanceIndicator: React.FC = () => {
         </text>
         
         <text
-          x={centerRadius}
-          y={centerRadius + 15}
+          x="250"
+          y="265"
           textAnchor="middle"
           className="text-sm fill-muted-foreground"
         >
@@ -116,37 +82,51 @@ const CircularBalanceIndicator: React.FC = () => {
         </text>
       </svg>
 
-      {/* Индикаторы сфер жизни */}
+      {/* Индикаторы сфер жизни вокруг центрального круга */}
       {lifeSpheres.map((sphere) => {
         const position = getSpherePosition(sphere.angle);
+        const IconComponent = sphere.icon;
+        
         return (
           <Button
             key={sphere.id}
             variant="ghost"
-            size="icon"
-            className={`absolute w-12 h-12 rounded-full glass hover:glass-hover sphere-${sphere.id} transition-all duration-300 transform hover:scale-110`}
+            className={`absolute rounded-full glass hover:glass-hover transition-all duration-300 transform hover:scale-110 cursor-pointer flex flex-col items-center justify-center`}
             style={{
               left: `${position.x}px`,
               top: `${position.y}px`,
+              width: `${sphereSize}px`,
+              height: `${sphereSize}px`,
+              backgroundColor: `hsl(var(--${sphere.color}) / 0.1)`,
+              border: `2px solid hsl(var(--${sphere.color}))`,
             }}
             onClick={() => navigate(sphere.route)}
             onMouseEnter={() => setHoveredSphere(sphere.id)}
             onMouseLeave={() => setHoveredSphere(null)}
-            title={`${sphere.name}: ${sphere.value}/10`}
+            title={`${sphere.name}: ${sphere.value}/100`}
           >
-            <div className="w-6 h-6 rounded-full bg-current opacity-80" />
+            <IconComponent 
+              className={`w-6 h-6 mb-1`}
+              style={{ color: `hsl(var(--${sphere.color}))` }}
+            />
+            <span 
+              className="text-xs font-bold"
+              style={{ color: `hsl(var(--${sphere.color}))` }}
+            >
+              {sphere.value}
+            </span>
           </Button>
         );
       })}
 
       {/* Подписи для наведенной сферы */}
       {hoveredSphere && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 glass p-3 rounded-lg">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 glass p-3 rounded-lg z-10">
           <p className="text-sm font-medium text-foreground">
             {lifeSpheres.find(s => s.id === hoveredSphere)?.name}
           </p>
           <p className="text-xs text-muted-foreground">
-            {lifeSpheres.find(s => s.id === hoveredSphere)?.value}/10
+            {lifeSpheres.find(s => s.id === hoveredSphere)?.value}/100
           </p>
         </div>
       )}

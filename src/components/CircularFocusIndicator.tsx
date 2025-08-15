@@ -25,75 +25,97 @@ const CircularFocusIndicator: React.FC = () => {
   const totalTasks = focusTasks.length;
   const progressPercentage = Math.round((completedTasks / totalTasks) * 100);
   
-  const centerRadius = 80;
-  const taskRadius = 120;
-  const taskSize = 40;
+  const centerSize = 100; // Размер центрального индикатора
+  const taskSize = Math.round(centerSize / 1.5); // Размер задач в 1.5 раза меньше
+  const taskRadius = 140; // Расстояние от центра до задач
 
   const getTaskPosition = (angle: number) => {
     const radian = (angle * Math.PI) / 180;
-    const x = centerRadius + taskRadius * Math.cos(radian);
-    const y = centerRadius + taskRadius * Math.sin(radian);
+    const x = 180 + taskRadius * Math.cos(radian);
+    const y = 180 + taskRadius * Math.sin(radian);
     return { x: x - taskSize / 2, y: y - taskSize / 2 };
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string, sphere: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500/20 border-red-500';
-      case 'medium': return 'bg-yellow-500/20 border-yellow-500';
-      default: return 'bg-blue-500/20 border-blue-500';
+      case 'high': return `bg-red-500/20 border-red-500`;
+      case 'medium': return `bg-yellow-500/20 border-yellow-500`;
+      default: return `bg-blue-500/20 border-blue-500`;
     }
   };
 
+  const getSphereColor = (sphere: string) => {
+    const sphereColors: {[key: string]: string} = {
+      work: 'harmony-work',
+      health: 'harmony-health',
+      relationships: 'harmony-relationships',
+      development: 'harmony-growth',
+      spirituality: 'harmony-spirit',
+      finance: 'harmony-finance'
+    };
+    return sphereColors[sphere] || 'harmony-work';
+  };
+
   return (
-    <div className="relative w-full flex justify-center items-center min-h-[320px]">
-      <svg width="320" height="320" className="relative">
-        {/* Прогресс кольцо */}
+    <div className="relative w-full flex justify-center items-center min-h-[360px]">
+      <svg width="360" height="360" className="absolute">
+        {/* Фоновый круг прогресса */}
         <circle
-          cx={centerRadius}
-          cy={centerRadius}
-          r="50"
+          cx="180"
+          cy="180"
+          r="45"
           fill="none"
           stroke="hsl(var(--border))"
-          strokeWidth="8"
+          strokeWidth="6"
           className="opacity-20"
         />
         
+        {/* Прогресс кольцо */}
         <circle
-          cx={centerRadius}
-          cy={centerRadius}
-          r="50"
+          cx="180"
+          cy="180"
+          r="45"
           fill="none"
           stroke="hsl(var(--harmony-health))"
-          strokeWidth="8"
-          strokeDasharray={`${2 * Math.PI * 50}`}
-          strokeDashoffset={`${2 * Math.PI * 50 * (1 - progressPercentage / 100)}`}
+          strokeWidth="6"
+          strokeDasharray={`${2 * Math.PI * 45}`}
+          strokeDashoffset={`${2 * Math.PI * 45 * (1 - progressPercentage / 100)}`}
           className="transition-all duration-500 ease-out"
-          transform={`rotate(-90 ${centerRadius} ${centerRadius})`}
+          transform="rotate(-90 180 180)"
         />
 
-        {/* Центральный индикатор прогресса */}
+        {/* Центральный круг прогресса дня */}
         <circle
-          cx={centerRadius}
-          cy={centerRadius}
-          r="35"
+          cx="180"
+          cy="180"
+          r={centerSize / 2}
           fill="hsl(var(--card))"
           stroke="hsl(var(--border))"
-          strokeWidth="2"
+          strokeWidth="3"
           className="drop-shadow-lg"
         />
         
         <text
-          x={centerRadius}
-          y={centerRadius - 5}
+          x="180"
+          y="175"
           textAnchor="middle"
-          className="text-lg font-space font-bold fill-foreground"
+          className="text-2xl font-space font-bold fill-foreground"
         >
           {progressPercentage}%
         </text>
         
         <text
-          x={centerRadius}
-          y={centerRadius + 10}
+          x="180"
+          y="190"
+          textAnchor="middle"
+          className="text-xs fill-muted-foreground"
+        >
+          Прогресс дня
+        </text>
+        
+        <text
+          x="180"
+          y="200"
           textAnchor="middle"
           className="text-xs fill-muted-foreground"
         >
@@ -101,25 +123,34 @@ const CircularFocusIndicator: React.FC = () => {
         </text>
       </svg>
 
-      {/* Задачи вокруг центра */}
+      {/* Круглые задачи вокруг центрального прогресса */}
       {focusTasks.map((task) => {
         const position = getTaskPosition(task.angle);
+        const sphereColor = getSphereColor(task.sphere);
+        
         return (
           <Button
             key={task.id}
             variant="ghost"
-            size="icon"
-            className={`absolute w-10 h-10 rounded-full glass hover:glass-hover border-2 transition-all duration-300 transform hover:scale-110 ${getPriorityColor(task.priority)}`}
+            className={`absolute rounded-full glass hover:glass-hover transition-all duration-300 transform hover:scale-110 cursor-pointer flex items-center justify-center`}
             style={{
               left: `${position.x}px`,
               top: `${position.y}px`,
+              width: `${taskSize}px`,
+              height: `${taskSize}px`,
+              backgroundColor: task.completed 
+                ? `hsl(var(--harmony-health) / 0.2)` 
+                : `hsl(var(--${sphereColor}) / 0.1)`,
+              border: `2px solid ${task.completed 
+                ? `hsl(var(--harmony-health))` 
+                : `hsl(var(--${sphereColor}))`}`,
             }}
             title={task.title}
           >
             {task.completed ? (
-              <CheckCircle2 className="w-5 h-5 text-harmony-health" />
+              <CheckCircle2 className="w-6 h-6 text-harmony-health" />
             ) : (
-              <Circle className="w-5 h-5 text-muted-foreground" />
+              <Circle className="w-6 h-6" style={{ color: `hsl(var(--${sphereColor}))` }} />
             )}
           </Button>
         );
