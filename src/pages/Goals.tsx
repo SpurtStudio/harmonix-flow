@@ -12,6 +12,8 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { Progress } from '../components/ui/progress'; // Для визуализации прогресса
+import { Badge } from '../components/ui/badge'; // Для отображения тегов
 
 const Goals: React.FC = () => {
   const [visions, setVisions] = useState<Vision[]>([]);
@@ -21,7 +23,10 @@ const Goals: React.FC = () => {
   const [isAnalyzingGoals, setIsAnalyzingGoals] = useState(false);
   const [balanceAnalysis, setBalanceAnalysis] = useState<string | null>(null);
   const [isAnalyzingBalance, setIsAnalyzingBalance] = useState(false);
-  
+  const [lifeSphereBalances, setLifeSphereBalances] = useState<Record<string, number>>({});
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
+  const [changeHistory, setChangeHistory] = useState<any[]>([]);
+
   // Состояния для формы добавления цели
   const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false);
   const [newGoalType, setNewGoalType] = useState<'vision' | 'global' | 'strategic'>('vision');
@@ -30,8 +35,30 @@ const Goals: React.FC = () => {
   const [newGoalLifeSphere, setNewGoalLifeSphere] = useState('work');
   const [newGoalPriority, setNewGoalPriority] = useState(5);
   const [newGoalKrs, setNewGoalKrs] = useState(['']);
+  const [newGoalBalanceScore, setNewGoalBalanceScore] = useState(5); // Для видения
+  const [newGoalProgress, setNewGoalProgress] = useState(0); // Для глобальных целей
+  const [newGoalImpactOnBalance, setNewGoalImpactOnBalance] = useState(5); // Для стратегических целей
+  const [newGoalImageUrl, setNewGoalImageUrl] = useState(''); // Для видения
 
   const { propagateChange, applyAdjustments } = useChangePropagation();
+
+  const calculateLifeSphereBalances = useCallback(() => {
+    const balances: Record<string, number> = {};
+    const sphereCounts: Record<string, number> = {};
+    const totalGoals = globalGoals.length;
+    
+    // Подсчитываем количество целей по каждой сфере
+    globalGoals.forEach(goal => {
+      sphereCounts[goal.lifeSphere] = (sphereCounts[goal.lifeSphere] || 0) + 1;
+    });
+    
+    // Вычисляем баланс для каждой сферы (в процентах от общего количества целей)
+    Object.keys(sphereCounts).forEach(sphere => {
+      balances[sphere] = Math.round((sphereCounts[sphere] / totalGoals) * 100);
+    });
+    
+    setLifeSphereBalances(balances);
+  }, [globalGoals]);
 
   useEffect(() => {
     const loadGoals = async () => {
@@ -42,12 +69,15 @@ const Goals: React.FC = () => {
         setVisions(loadedVisions);
         setGlobalGoals(loadedGlobalGoals);
         setStrategicGoals(loadedStrategicGoals);
+        
+        // Вычисляем баланс по сферам жизни после загрузки целей
+        calculateLifeSphereBalances();
       } catch (error) {
         console.error('Ошибка при загрузке целей:', error);
       }
     };
     loadGoals();
-  }, []);
+  }, [calculateLifeSphereBalances]);
 
   const handleAddGoal = useCallback(async () => {
     try {
@@ -58,7 +88,8 @@ const Goals: React.FC = () => {
           newGoalId = await db.visions.add({
             name: newGoalName,
             description: newGoalDescription,
-            balanceScore: 8, // По умолчанию
+            balanceScore: newGoalBalanceScore,
+            imageUrl: newGoalImageUrl || undefined,
           });
           // Перезагружаем цели после добавления
           const loadedVisions = await db.visions.toArray();
@@ -69,7 +100,7 @@ const Goals: React.FC = () => {
           newGoalId = await db.globalGoals.add({
             name: newGoalName,
             smartFormulation: newGoalDescription,
-            progress: 0, // Начальный прогресс
+            progress: newGoalProgress,
             lifeSphere: newGoalLifeSphere,
           });
           // Перезагружаем цели после добавления
@@ -82,7 +113,7 @@ const Goals: React.FC = () => {
             name: newGoalName,
             krs: newGoalKrs.filter(kr => kr.trim() !== ''), // Убираем пустые KR
             priority: newGoalPriority,
-            impactOnBalance: 5, // По умолчанию
+            impactOnBalance: newGoalImpactOnBalance,
           });
           // Перезагружаем цели после добавления
           const loadedStrategicGoals = await db.strategicGoals.toArray();
@@ -101,16 +132,18 @@ const Goals: React.FC = () => {
           description: newGoalDescription,
           lifeSphere: newGoalLifeSphere,
           priority: newGoalPriority,
-          krs: newGoalKrs
+          krs: newGoalKrs,
+          balanceScore: newGoalBalanceScore,
+          progress: newGoalProgress,
+          impactOnBalance: newGoalImpactOnBalance,
+          imageUrl: newGoalImageUrl
         }
       });
       
       console.log('Анализ влияния изменений:', changeResult);
       
       // Сбрасываем форму
-      setNewGoalName('');
-      setNewGoalDescription('');
-      setNewGoalKrs(['']);
+      resetForm();
       setIsAddGoalDialogOpen(false);
       
       alert(`Цель типа "${newGoalType}" успешно добавлена!`);
@@ -118,7 +151,7 @@ const Goals: React.FC = () => {
       console.error('Ошибка при добавлении цели:', error);
       alert('Ошибка при добавлении цели.');
     }
-  }, [newGoalType, newGoalName, newGoalDescription, newGoalLifeSphere, newGoalPriority, newGoalKrs, propagateChange]);
+  }, [newGoalType, newGoalName, newGoalDescription, newGoalLifeSphere, newGoalPriority, newGoalKrs, newGoalBalanceScore, newGoalProgress, newGoalImpactOnBalance, newGoalImageUrl, propagateChange]);
 
   const handleAnalyzeGoals = useCallback(async () => {
     setIsAnalyzingGoals(true);
@@ -150,6 +183,9 @@ const Goals: React.FC = () => {
   const handleAnalyzeBalance = useCallback(async () => {
     setIsAnalyzingBalance(true);
     try {
+      // Вычисляем баланс по сферам
+      calculateLifeSphereBalances();
+      
       // Анализ баланса по сферам жизни
       const lifeSpheres: Record<string, number> = {};
       globalGoals.forEach(goal => {
@@ -165,7 +201,7 @@ const Goals: React.FC = () => {
     } finally {
       setIsAnalyzingBalance(false);
     }
-  }, [globalGoals]);
+  }, [globalGoals, calculateLifeSphereBalances]);
 
   const handleWhatIfScenario = useCallback(async () => {
     // Режим "Что-если" - имитация изменения приоритета стратегической цели
@@ -187,6 +223,25 @@ const Goals: React.FC = () => {
     console.log('Анализ сценария "Что-если":', changeResult);
     alert(`Проанализирован сценарий: увеличение приоритета цели "${randomGoal.name}" с ${randomGoal.priority} до ${newPriority}. Проверьте консоль для деталей.`);
   }, [strategicGoals, propagateChange]);
+
+  const loadChangeHistory = useCallback(async () => {
+    try {
+      const history = await db.changeHistory.toArray();
+      // Сортируем по времени в обратном порядке (новые первыми)
+      const sortedHistory = history.sort((a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      setChangeHistory(sortedHistory);
+    } catch (error) {
+      console.error('Ошибка при загрузке истории изменений:', error);
+      alert('Ошибка при загрузке истории изменений.');
+    }
+  }, []);
+
+  const handleViewHistory = useCallback(async () => {
+    await loadChangeHistory();
+    setIsViewingHistory(true);
+  }, [loadChangeHistory]);
 
   const handleRollbackChanges = useCallback(async () => {
     try {
@@ -216,6 +271,19 @@ const Goals: React.FC = () => {
     const updatedKrs = [...newGoalKrs];
     updatedKrs.splice(index, 1);
     setNewGoalKrs(updatedKrs);
+  };
+
+  // Функция для сброса формы
+  const resetForm = () => {
+    setNewGoalName('');
+    setNewGoalDescription('');
+    setNewGoalKrs(['']);
+    setNewGoalImageUrl('');
+    setNewGoalBalanceScore(5);
+    setNewGoalProgress(0);
+    setNewGoalImpactOnBalance(5);
+    setNewGoalPriority(5);
+    setNewGoalLifeSphere('work');
   };
 
   return (
@@ -275,7 +343,7 @@ const Goals: React.FC = () => {
                 Добавить новую цель
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Добавить новую цель</DialogTitle>
               </DialogHeader>
@@ -296,87 +364,144 @@ const Goals: React.FC = () => {
                 
                 <div>
                   <Label htmlFor="goalName">Название</Label>
-                  <Input 
-                    id="goalName" 
-                    value={newGoalName} 
-                    onChange={(e) => setNewGoalName(e.target.value)} 
+                  <Input
+                    id="goalName"
+                    value={newGoalName}
+                    onChange={(e) => setNewGoalName(e.target.value)}
                     placeholder="Введите название цели"
                   />
                 </div>
                 
                 <div>
                   <Label htmlFor="goalDescription">Описание</Label>
-                  <Textarea 
-                    id="goalDescription" 
-                    value={newGoalDescription} 
-                    onChange={(e) => setNewGoalDescription(e.target.value)} 
+                  <Textarea
+                    id="goalDescription"
+                    value={newGoalDescription}
+                    onChange={(e) => setNewGoalDescription(e.target.value)}
                     placeholder="Введите описание цели"
+                    className="min-h-[100px]"
                   />
                 </div>
                 
+                {newGoalType === 'vision' && (
+                  <>
+                    <div>
+                      <Label htmlFor="goalBalanceScore">Оценка баланса (1-10)</Label>
+                      <Input
+                        id="goalBalanceScore"
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={newGoalBalanceScore}
+                        onChange={(e) => setNewGoalBalanceScore(parseInt(e.target.value) || 5)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="goalImageUrl">URL изображения (опционально)</Label>
+                      <Input
+                        id="goalImageUrl"
+                        value={newGoalImageUrl}
+                        onChange={(e) => setNewGoalImageUrl(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                  </>
+                )}
+                
                 {newGoalType === 'global' && (
-                  <div>
-                    <Label htmlFor="goalLifeSphere">Сфера жизни</Label>
-                    <Select value={newGoalLifeSphere} onValueChange={setNewGoalLifeSphere}>
-                      <SelectTrigger id="goalLifeSphere">
-                        <SelectValue placeholder="Выберите сферу жизни" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="work">Работа</SelectItem>
-                        <SelectItem value="health">Здоровье</SelectItem>
-                        <SelectItem value="family">Семья/Друзья</SelectItem>
-                        <SelectItem value="development">Развитие</SelectItem>
-                        <SelectItem value="hobbies">Хобби</SelectItem>
-                        <SelectItem value="rest">Отдых</SelectItem>
-                        <SelectItem value="finance">Финансы</SelectItem>
-                        <SelectItem value="spirituality">Духовность</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <>
+                    <div>
+                      <Label htmlFor="goalLifeSphere">Сфера жизни</Label>
+                      <Select value={newGoalLifeSphere} onValueChange={setNewGoalLifeSphere}>
+                        <SelectTrigger id="goalLifeSphere">
+                          <SelectValue placeholder="Выберите сферу жизни" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="work">Работа</SelectItem>
+                          <SelectItem value="health">Здоровье</SelectItem>
+                          <SelectItem value="family">Семья/Друзья</SelectItem>
+                          <SelectItem value="development">Развитие</SelectItem>
+                          <SelectItem value="hobbies">Хобби</SelectItem>
+                          <SelectItem value="rest">Отдых</SelectItem>
+                          <SelectItem value="finance">Финансы</SelectItem>
+                          <SelectItem value="spirituality">Духовность</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="goalProgress">Прогресс (0-100%)</Label>
+                      <Input
+                        id="goalProgress"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newGoalProgress}
+                        onChange={(e) => setNewGoalProgress(parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                  </>
                 )}
                 
                 {newGoalType === 'strategic' && (
-                  <div>
-                    <Label>Ключевые результаты (KRs)</Label>
-                    {newGoalKrs.map((kr, index) => (
-                      <div key={index} className="flex items-center mt-2">
-                        <Input 
-                          value={kr} 
-                          onChange={(e) => updateKrField(index, e.target.value)} 
-                          placeholder={`Ключевой результат ${index + 1}`}
-                        />
-                        {newGoalKrs.length > 1 && (
-                          <Button 
-                            variant="outline" 
-                            className="ml-2" 
-                            onClick={() => removeKrField(index)}
-                          >
-                            Удалить
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                    <Button variant="outline" className="mt-2" onClick={addKrField}>
-                      Добавить KR
-                    </Button>
-                  </div>
+                  <>
+                    <div>
+                      <Label>Ключевые результаты (KRs)</Label>
+                      {newGoalKrs.map((kr, index) => (
+                        <div key={index} className="flex items-center mt-2">
+                          <Input
+                            value={kr}
+                            onChange={(e) => updateKrField(index, e.target.value)}
+                            placeholder={`Ключевой результат ${index + 1}`}
+                          />
+                          {newGoalKrs.length > 1 && (
+                            <Button
+                              variant="outline"
+                              className="ml-2"
+                              onClick={() => removeKrField(index)}
+                            >
+                              Удалить
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button variant="outline" className="mt-2" onClick={addKrField}>
+                        Добавить KR
+                      </Button>
+                    </div>
+                    <div>
+                      <Label htmlFor="goalPriority">Приоритет (1-10)</Label>
+                      <Input
+                        id="goalPriority"
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={newGoalPriority}
+                        onChange={(e) => setNewGoalPriority(parseInt(e.target.value) || 5)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="goalImpactOnBalance">Влияние на баланс (1-10)</Label>
+                      <Input
+                        id="goalImpactOnBalance"
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={newGoalImpactOnBalance}
+                        onChange={(e) => setNewGoalImpactOnBalance(parseInt(e.target.value) || 5)}
+                      />
+                    </div>
+                  </>
                 )}
                 
-                {newGoalType === 'strategic' && (
-                  <div>
-                    <Label htmlFor="goalPriority">Приоритет (1-10)</Label>
-                    <Input 
-                      id="goalPriority" 
-                      type="number" 
-                      min="1" 
-                      max="10" 
-                      value={newGoalPriority} 
-                      onChange={(e) => setNewGoalPriority(parseInt(e.target.value) || 5)} 
-                    />
-                  </div>
-                )}
-                
-                <Button onClick={handleAddGoal}>Добавить цель</Button>
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={() => {
+                    resetForm();
+                    setIsAddGoalDialogOpen(false);
+                  }}>
+                    Отмена
+                  </Button>
+                  <Button onClick={handleAddGoal}>Добавить цель</Button>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -390,17 +515,49 @@ const Goals: React.FC = () => {
             <CardTitle>Анализатор баланса по сферам жизни</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {balanceAnalysis || 'Анализ влияния целей на баланс по сферам жизни.'}
-            </p>
-            <Button 
-              variant="outline" 
-              className="mt-2" 
-              onClick={handleAnalyzeBalance}
-              disabled={isAnalyzingBalance}
-            >
-              {isAnalyzingBalance ? 'Анализ...' : 'Оценить влияние'}
-            </Button>
+            <div className="space-y-4">
+              {/* Визуализация баланса по сферам */}
+              {Object.keys(lifeSphereBalances).length > 0 ? (
+                <div className="space-y-3">
+                  {Object.entries(lifeSphereBalances).map(([sphere, balance]) => (
+                    <div key={sphere} className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-sm font-medium">
+                          {sphere === 'work' && 'Работа'}
+                          {sphere === 'health' && 'Здоровье'}
+                          {sphere === 'family' && 'Семья/Друзья'}
+                          {sphere === 'development' && 'Развитие'}
+                          {sphere === 'hobbies' && 'Хобби'}
+                          {sphere === 'rest' && 'Отдых'}
+                          {sphere === 'finance' && 'Финансы'}
+                          {sphere === 'spirituality' && 'Духовность'}
+                        </span>
+                        <span className="text-sm text-gray-500">{balance}%</span>
+                      </div>
+                      <Progress value={balance} className="h-2" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">Нет данных для отображения баланса.</p>
+              )}
+              
+              {/* Рекомендации ИИ */}
+              <div className="pt-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {balanceAnalysis || 'Анализ влияния целей на баланс по сферам жизни.'}
+                </p>
+              </div>
+              
+              <Button
+                variant="outline"
+                className="mt-2"
+                onClick={handleAnalyzeBalance}
+                disabled={isAnalyzingBalance}
+              >
+                {isAnalyzingBalance ? 'Анализ...' : 'Оценить влияние'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -461,7 +618,7 @@ const Goals: React.FC = () => {
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Журнал всех корректировок целей и их влияния на систему.
             </p>
-            <Button variant="outline" className="mt-2">Просмотреть историю</Button>
+            <Button variant="outline" className="mt-2" onClick={handleViewHistory}>Просмотреть историю</Button>
           </CardContent>
         </Card>
 
@@ -479,8 +636,19 @@ const Goals: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
-};
-
-export default Goals;
+      
+      {/* Диалог истории изменений */}
+      <Dialog open={isViewingHistory} onOpenChange={setIsViewingHistory}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>История изменений целей</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {changeHistory.length > 0 ? (
+              <div className="space-y-3">
+                {changeHistory.map((change, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">
+                          {change.changeType === 'goal_added'
