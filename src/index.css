@@ -259,14 +259,23 @@
   }
 
   /* Специальные утилиты для сфер жизни */
-  .sphere-work { @apply text-[hsl(var(--harmony-work))] bg-[hsl(var(--harmony-work))]/10; }
-  .sphere-health { @apply text-[hsl(var(--harmony-health))] bg-[hsl(var(--harmony-health))]/10; }
-  .sphere-relationships { @apply text-[hsl(var(--harmony-relationships))] bg-[hsl(var(--harmony-relationships))]/10; }
-  .sphere-growth { @apply text-[hsl(var(--harmony-growth))] bg-[hsl(var(--harmony-growth))]/10; }
-  .sphere-hobby { @apply text-[hsl(var(--harmony-hobby))] bg-[hsl(var(--harmony-hobby))]/10; }
-  .sphere-rest { @apply text-[hsl(var(--harmony-rest))] bg-[hsl(var(--harmony-rest))]/10; }
-  .sphere-finance { @apply text-[hsl(var(--harmony-finance))] bg-[hsl(var(--harmony-finance))]/10; }
-  .sphere-spirit { @apply text-[hsl(var(--harmony-spirit))] bg-[hsl(var(--harmony-spirit))]/10; }
+  .sphere-work { @apply text-[hsl(var(--harmony-work))] bg-[hsl(var(--harmony-work))]/10 hover:bg-[hsl(var(--harmony-work))]/20; }
+  .sphere-health { @apply text-[hsl(var(--harmony-health))] bg-[hsl(var(--harmony-health))]/10 hover:bg-[hsl(var(--harmony-health))]/20; }
+  .sphere-relationships { @apply text-[hsl(var(--harmony-relationships))] bg-[hsl(var(--harmony-relationships))]/10 hover:bg-[hsl(var(--harmony-relationships))]/20; }
+  .sphere-growth { @apply text-[hsl(var(--harmony-growth))] bg-[hsl(var(--harmony-growth))]/10 hover:bg-[hsl(var(--harmony-growth))]/20; }
+  .sphere-hobby { @apply text-[hsl(var(--harmony-hobby))] bg-[hsl(var(--harmony-hobby))]/10 hover:bg-[hsl(var(--harmony-hobby))]/20; }
+  .sphere-hobbies { @apply text-[hsl(var(--harmony-hobby))] bg-[hsl(var(--harmony-hobby))]/10 hover:bg-[hsl(var(--harmony-hobby))]/20; }
+  .sphere-rest { @apply text-[hsl(var(--harmony-rest))] bg-[hsl(var(--harmony-rest))]/10 hover:bg-[hsl(var(--harmony-rest))]/20; }
+  .sphere-finance { @apply text-[hsl(var(--harmony-finance))] bg-[hsl(var(--harmony-finance))]/10 hover:bg-[hsl(var(--harmony-finance))]/20; }
+  .sphere-spirit { @apply text-[hsl(var(--harmony-spirit))] bg-[hsl(var(--harmony-spirit))]/10 hover:bg-[hsl(var(--harmony-spirit))]/20; }
+  .sphere-spirituality { @apply text-[hsl(var(--harmony-spirit))] bg-[hsl(var(--harmony-spirit))]/10 hover:bg-[hsl(var(--harmony-spirit))]/20; }
+
+  /* Priority и urgency labels */
+  .priority-high { @apply bg-red-500/20 text-red-700 border border-red-300 dark:text-red-400 dark:border-red-600; }
+  .priority-medium { @apply bg-yellow-500/20 text-yellow-700 border border-yellow-300 dark:text-yellow-400 dark:border-yellow-600; }
+  .priority-low { @apply bg-blue-500/20 text-blue-700 border border-blue-300 dark:text-blue-400 dark:border-blue-600; }
+  .urgency-urgent { @apply bg-orange-500/20 text-orange-700 border border-orange-300 dark:text-orange-400 dark:border-orange-600; }
+  .urgency-normal { @apply bg-green-500/20 text-green-700 border border-green-300 dark:text-green-400 dark:border-green-600; }
 }
 
 @layer utilities {

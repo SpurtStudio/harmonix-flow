@@ -1,9 +1,8 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LifeBalanceRadar } from './LifeBalanceRadar';
-import { QuickActions } from './QuickActions';
-import { TodaysFocus } from './TodaysFocus';
+import CircularBalanceIndicator from './CircularBalanceIndicator';
+import CircularFocusIndicator from './CircularFocusIndicator';
 import { UpcomingTasks } from './UpcomingTasks';
 import { ProgressOverview } from './ProgressOverview';
 import { Sparkles, Calendar, Target, Book } from 'lucide-react';
@@ -37,45 +36,48 @@ export const LifeDashboard = React.memo(({ userName = "Друг" }: LifeDashboar
         </p>
       </div>
 
-      {/* Основной контент */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Левая колонка - Баланс жизни */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="card-glass p-6">
-            <div className="flex items-center justify-between mb-6">
-              <HelpTooltip content="Визуализация вашего баланса по 8 сферам жизни.">
-                <h2 className="text-xl font-space font-semibold text-foreground">
-                  Баланс жизни
-                </h2>
-              </HelpTooltip>
-              <div className="w-3 h-3 rounded-full bg-harmony-health animate-pulse" />
-            </div>
-            <LifeBalanceRadar />
-          </Card>
-
-          <Card className="card-glass p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Target className="w-5 h-5 text-harmony-growth" />
-              <h3 className="font-space font-medium text-foreground">
-                Быстрые действия
-              </h3>
-            </div>
-            <QuickActions />
-          </Card>
+      {/* Центральный индикатор баланса */}
+      <Card className="card-glass p-8 mb-8">
+        <div className="text-center mb-6">
+          <HelpTooltip content="Центральный индикатор баланса с кликабельными сферами жизни вокруг.">
+            <h2 className="text-2xl font-space font-semibold text-foreground mb-2">
+              Индикатор баланса жизни
+            </h2>
+          </HelpTooltip>
+          <p className="text-muted-foreground">
+            Нажмите на любую сферу для перехода к детальному просмотру
+          </p>
         </div>
+        <CircularBalanceIndicator />
+      </Card>
 
-        {/* Центральная колонка - Фокус дня */}
-        <div className="lg:col-span-1 space-y-6">
+      {/* Основной контент в 2 колонки */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Правая колонка - Фокус дня */}
+        <div className="space-y-6">
           <Card className="card-glass p-6">
             <div className="flex items-center gap-3 mb-6">
               <Calendar className="w-5 h-5 text-harmony-work" />
-              <HelpTooltip content="Ваши основные задачи и приоритеты на сегодня.">
+              <HelpTooltip content="Ваши основные задачи и приоритеты на сегодня с круговым индикатором прогресса.">
                 <h2 className="text-xl font-space font-semibold text-foreground">
                   Фокус дня
                 </h2>
               </HelpTooltip>
             </div>
-            <TodaysFocus />
+            <CircularFocusIndicator />
+            
+            {/* Мотивационное сообщение */}
+            <div className="mt-6 glass p-4 rounded-xl bg-harmony-spirit/5">
+              <div className="text-center space-y-2">
+                <Sparkles className="w-6 h-6 text-harmony-spirit mx-auto" />
+                <p className="text-sm font-medium text-foreground">
+                  Вы на правильном пути!
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Каждая выполненная задача приближает вас к гармонии
+                </p>
+              </div>
+            </div>
           </Card>
 
           <Card className="card-glass p-6">
@@ -97,12 +99,15 @@ export const LifeDashboard = React.memo(({ userName = "Друг" }: LifeDashboar
           </Card>
         </div>
 
-        {/* Правая колонка - Задачи и прогресс */}
-        <div className="lg:col-span-1 space-y-6">
+        {/* Левая колонка - Предстоящее */}
+        <div className="space-y-6">
           <Card className="card-glass p-6">
-            <h3 className="text-lg font-space font-medium text-foreground mb-4">
-              Предстоящие задачи
-            </h3>
+            <div className="flex items-center gap-3 mb-4">
+              <Target className="w-5 h-5 text-harmony-growth" />
+              <h3 className="text-lg font-space font-medium text-foreground">
+                Предстоящие задачи
+              </h3>
+            </div>
             <UpcomingTasks />
           </Card>
 
