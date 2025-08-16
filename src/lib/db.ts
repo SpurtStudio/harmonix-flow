@@ -109,10 +109,13 @@ export interface Idea {
   id?: number;
   name: string;
   description: string;
+  tags?: string[]; // Теги для идей
+  category?: string; // Категория идеи
   sourceJournalEntryId?: number;
   analysisResult?: string; // Результат анализа через Квадрат Декарта
   linkedGoalIds?: number[]; // Связь с целями
   linkedProjectIds?: number[]; // Связь с проектами
+  linkedTaskIds?: number[]; // Связь с задачами
   status: 'active' | 'dormant' | 'realized';
 }
 
@@ -305,7 +308,7 @@ export class HarmonyDB extends Dexie {
       tasks: '++id, name, priority, status',
       subTasks: '++id, name, status',
       journalEntries: '++id, timestamp',
-      ideas: '++id, name, status',
+      ideas: '++id, name, status, category',
       habits: '++id, name, frequency',
       notifications: '++id, timestamp, read, type',
       familyMembers: '++id, name, relationship',
@@ -321,6 +324,11 @@ export class HarmonyDB extends Dexie {
   // Обновление до версии 2 с добавлением новых полей в таблицу tasks
   this.version(2).stores({
   tasks: '++id, name, priority, status, dueDate, category',
+  });
+  
+  // Обновление до версии 3 с добавлением новых полей в таблицу ideas
+  this.version(3).stores({
+  ideas: '++id, name, status, category, tags, linkedGoalIds, linkedProjectIds, linkedTaskIds',
   });
   
   // Обновление до версии 3 с добавлением индекса для subTaskIds
