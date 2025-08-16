@@ -10,6 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/
 import { useUserPreferences } from '@/context/UserPreferencesContext';
 import { getLifeBalanceRecommendations } from '../lib/ai';
 import { Link } from 'react-router-dom';
+import { useLifeBalanceData } from '@/hooks/useLifeBalanceData';
+import { EnergyLevelIndicator } from '@/components/EnergyLevelIndicator';
+import { ChangePropagationSystem } from '@/components/ChangePropagationSystem';
+import { InteractiveDocumentation } from '@/components/InteractiveDocumentation';
 
 const Index: React.FC = () => {
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
@@ -30,28 +34,19 @@ const Index: React.FC = () => {
   const { isBeginnerMode } = useUserPreferences();
   const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
   const [isGeneratingRecommendation, setIsGeneratingRecommendation] = useState(false);
-
-  // Заглушка для получения данных о балансе жизни
-  const getMockLifeBalanceData = useCallback(() => {
-    return {
-      work: Math.floor(Math.random() * 10) + 1,
-      health: Math.floor(Math.random() * 10) + 1,
-      familyFriends: Math.floor(Math.random() * 10) + 1,
-      development: Math.floor(Math.random() * 10) + 1,
-      hobbies: Math.floor(Math.random() * 10) + 1,
-      rest: Math.floor(Math.random() * 10) + 1,
-      finance: Math.floor(Math.random() * 10) + 1,
-      spirituality: Math.floor(Math.random() * 10) + 1,
-    };
-  }, []);
+  const { lifeSpheres, averageBalance, loading: lifeBalanceLoading } = useLifeBalanceData();
 
   const handleGetAIRecommendations = useCallback(async () => {
     setIsGeneratingRecommendation(true);
-    const balanceData = getMockLifeBalanceData();
+    // Преобразуем данные из хука в формат, ожидаемый функцией getLifeBalanceRecommendations
+    const balanceData: Record<string, number> = {};
+    lifeSpheres.forEach(sphere => {
+      balanceData[sphere.id] = sphere.value;
+    });
     const recommendation = await getLifeBalanceRecommendations(balanceData);
     setAiRecommendation(recommendation);
     setIsGeneratingRecommendation(false);
-  }, [getMockLifeBalanceData]);
+  }, [lifeSpheres]);
 
   return (
     <div className="p-6 space-y-6">
@@ -66,23 +61,29 @@ const Index: React.FC = () => {
             <CardTitle>Визуализация баланса жизни</CardTitle>
           </CardHeader>
           <CardContent>
-            <LifeBalanceRadar />
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              Индикатор общего баланса жизни: <span className="font-semibold text-green-600">Хорошо</span>.
-              <br />
-              <Button
-                variant="link"
-                onClick={handleGetAIRecommendations}
-                disabled={isGeneratingRecommendation}
-                className="p-0 h-auto text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
-              >
-                {isGeneratingRecommendation ? 'Получение рекомендаций...' : 'Получить рекомендации ИИ'}
-              </Button>
-            </p>
-            {aiRecommendation && (
-              <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
-                {aiRecommendation}
-              </p>
+            {lifeBalanceLoading ? (
+              <p>Загрузка данных баланса жизни...</p>
+            ) : (
+              <>
+                <LifeBalanceRadar />
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  Индикатор общего баланса жизни: <span className="font-semibold text-green-600">{averageBalance}%</span>.
+                  <br />
+                  <Button
+                    variant="link"
+                    onClick={handleGetAIRecommendations}
+                    disabled={isGeneratingRecommendation}
+                    className="p-0 h-auto text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
+                  >
+                    {isGeneratingRecommendation ? 'Получение рекомендаций...' : 'Получить рекомендации ИИ'}
+                  </Button>
+                </p>
+                {aiRecommendation && (
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                    {aiRecommendation}
+                  </p>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -127,53 +128,19 @@ const Index: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Заглушка для состояния энергии */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Состояние энергии</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg font-semibold">Текущий уровень: 85%</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Основано на вашем дневнике и активности. <span className="text-yellow-500"> (Заглушка)</span>
-                </p>
-              </CardContent>
-            </Card>
+            {/* Состояние энергии */}
+            <EnergyLevelIndicator />
           </>
         )}
       </div>
 
-      {/* Система оперативных изменений (заглушки) */}
+      {/* Система оперативных изменений */}
       {!isBeginnerMode && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Система оперативных изменений</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Индикаторы недавних изменений: <span className="text-yellow-500">Есть 2 незавершенных изменения. (Заглушка)</span>
-            </p>
-            <Button variant="outline" className="mr-2">Режим "Что-если" (Заглушка)</Button>
-            <Button variant="outline">История корректировок (Заглушка)</Button>
-          </CardContent>
-        </Card>
+        <ChangePropagationSystem />
       )}
 
-      {/* Интерактивная документация (заглушка) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Контекстная справка</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Наведите курсор на элементы для получения подсказок или{' '}
-            <Link to="/documentation" className="text-blue-500 cursor-pointer hover:underline">
-              перейдите в документацию
-            </Link>
-            <span className="text-yellow-500"> (Заглушка для контекстной справки)</span>
-          </p>
-        </CardContent>
-      </Card>
+      {/* Интерактивная документация */}
+      <InteractiveDocumentation />
     {/* Модальное окно приветствия */}
     <Dialog open={isWelcomeModalOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
