@@ -18,47 +18,43 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface AddHabitDialogProps {
+interface AddHobbyDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (habit: {
+  onSave: (hobby: {
     name: string;
     description: string;
-    frequency: string;
+    category: string;
+    goal?: string;
     reminderTime?: string;
     reminderEnabled?: boolean;
-    alternatingEnabled?: boolean;
-    alternatingPattern?: string[];
   }) => void;
 }
 
-export const AddHabitDialog: React.FC<AddHabitDialogProps> = ({ isOpen, onClose, onSave }) => {
+export const AddHobbyDialog: React.FC<AddHobbyDialogProps> = ({ isOpen, onClose, onSave }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [frequency, setFrequency] = useState('daily');
+  const [category, setCategory] = useState('');
+  const [goal, setGoal] = useState('');
   const [reminderTime, setReminderTime] = useState('');
   const [reminderEnabled, setReminderEnabled] = useState(false);
-  const [alternatingEnabled, setAlternatingEnabled] = useState(false);
-  const [alternatingPattern, setAlternatingPattern] = useState<string[]>(['work', 'rest']);
 
   const handleSave = () => {
     if (name.trim()) {
       onSave({
         name,
         description,
-        frequency,
+        category,
+        goal: goal || undefined,
         reminderTime: reminderEnabled ? reminderTime : undefined,
         reminderEnabled,
-        alternatingEnabled,
-        alternatingPattern: alternatingEnabled ? alternatingPattern : undefined
       });
       setName('');
       setDescription('');
-      setFrequency('daily');
+      setCategory('');
+      setGoal('');
       setReminderTime('');
       setReminderEnabled(false);
-      setAlternatingEnabled(false);
-      setAlternatingPattern(['work', 'rest']);
       onClose();
     }
   };
@@ -67,9 +63,9 @@ export const AddHabitDialog: React.FC<AddHabitDialogProps> = ({ isOpen, onClose,
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Добавить новую привычку</DialogTitle>
+          <DialogTitle>Добавить новое хобби</DialogTitle>
           <DialogDescription>
-            Заполните информацию о новой привычке. Нажмите сохранить, когда закончите.
+            Заполните информацию о новом хобби. Нажмите сохранить, когда закончите.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -96,19 +92,27 @@ export const AddHabitDialog: React.FC<AddHabitDialogProps> = ({ isOpen, onClose,
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="frequency" className="text-right">
-              Частота
+            <Label htmlFor="category" className="text-right">
+              Категория
             </Label>
-            <Select onValueChange={setFrequency} value={frequency}>
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Выберите частоту" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">Ежедневно</SelectItem>
-                <SelectItem value="weekly">Еженедельно</SelectItem>
-                <SelectItem value="monthly">Ежемесячно</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              id="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="goal" className="text-right">
+              Цель
+            </Label>
+            <Input
+              id="goal"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              className="col-span-3"
+              placeholder="Например: Научиться играть 3 песни на гитаре"
+            />
           </div>
         </div>
         <div className="grid gap-4 py-4">
@@ -131,36 +135,6 @@ export const AddHabitDialog: React.FC<AddHabitDialogProps> = ({ isOpen, onClose,
                   onChange={(e) => setReminderTime(e.target.value)}
                   className="ml-2"
                 />
-              )}
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="alternating" className="text-right">
-              Чередование
-            </Label>
-            <div className="col-span-3 flex items-center space-x-2">
-              <input
-                id="alternating"
-                type="checkbox"
-                checked={alternatingEnabled}
-                onChange={(e) => setAlternatingEnabled(e.target.checked)}
-                className="h-4 w-4"
-              />
-              {alternatingEnabled && (
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Паттерн 1"
-                    value={alternatingPattern[0] || ''}
-                    onChange={(e) => setAlternatingPattern(prev => [e.target.value, prev[1] || ''])}
-                    className="ml-2"
-                  />
-                  <Input
-                    placeholder="Паттерн 2"
-                    value={alternatingPattern[1] || ''}
-                    onChange={(e) => setAlternatingPattern(prev => [prev[0] || '', e.target.value])}
-                    className="ml-2"
-                  />
-                </div>
               )}
             </div>
           </div>

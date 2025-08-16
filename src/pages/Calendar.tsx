@@ -130,7 +130,14 @@ const CalendarPage: React.FC = () => {
             for (let i = 0; i < 7; i++) {
               const eventDate = new Date(startOfWeek);
               eventDate.setDate(startOfWeek.getDate() + i);
-              eventDate.setHours(8, 0, 0, 0); // Устанавливаем время на 8:00
+              
+              // Используем время выполнения привычки, если оно задано
+              if (habit.completionTime) {
+                const [hours, minutes] = habit.completionTime.split(':').map(Number);
+                eventDate.setHours(hours, minutes, 0, 0);
+              } else {
+                eventDate.setHours(8, 0, 0, 0); // Устанавливаем время по умолчанию на 8:00
+              }
               
               habitEvents.push({
                 id: `${habit.id!}_day${i}`,
@@ -144,10 +151,18 @@ const CalendarPage: React.FC = () => {
           }
           // Для еженедельных привычек создаем одно событие в начале недели
           else if (habit.frequency === 'weekly') {
+            // Используем время выполнения привычки, если оно задано
+            if (habit.completionTime) {
+              const [hours, minutes] = habit.completionTime.split(':').map(Number);
+              startOfWeek.setHours(hours, minutes, 0, 0);
+            } else {
+              startOfWeek.setHours(8, 0, 0, 0); // Устанавливаем время по умолчанию на 8:00
+            }
+            
             habitEvents.push({
               id: `${habit.id!}_weekly`,
               title: `Привычка: ${habit.name}`,
-              start: new Date(startOfWeek.setHours(8, 0, 0, 0)),
+              start: new Date(startOfWeek),
               end: new Date(startOfWeek.getTime() + 30 * 60 * 1000), // 30 минут
               type: 'habit',
               category: 'habits'
@@ -607,6 +622,22 @@ const CalendarPage: React.FC = () => {
                     }}
                   >
                     Не выполнено
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Найдем оригинальную привычку по ID события
+                      const habitId = typeof event.id === 'string' ? event.id.split('_')[0] : event.id;
+                      const habit = habits.find(h => String(h.id) === String(habitId));
+                      if (habit) {
+                        handleEditHabit(habit);
+                      }
+                    }}
+                  >
+                    Редактировать
                   </Button>
                 </div>
               )}

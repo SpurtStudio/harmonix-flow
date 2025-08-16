@@ -3,7 +3,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { db, JournalEntry } from '../lib/db';
+import { db, JournalEntry, Habit } from '../lib/db';
 import { useWhisperSpeechRecognition } from '../hooks/useWhisperSpeechRecognition';
 import { queryAI } from '../lib/api'; // Импорт функции для запросов к ИИ
 
@@ -17,6 +17,7 @@ const Journal: React.FC = () => {
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null); // Состояние для анализа ИИ
   const [isAnalyzing, setIsAnalyzing] = useState(false); // Состояние для индикатора анализа
+  const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]); // Связанные привычки
 
   const { isListening, transcript, error, startListening, stopListening, resetTranscript } = useWhisperSpeechRecognition();
 
@@ -30,6 +31,16 @@ const Journal: React.FC = () => {
   useEffect(() => {
     fetchJournalEntries();
   }, []);
+  
+  // Функция для получения связанных привычек
+  const fetchLinkedHabits = async (entry: JournalEntry) => {
+    if (entry.linkedHabitIds && entry.linkedHabitIds.length > 0) {
+      const habits = await db.habits.where('id').anyOf(entry.linkedHabitIds).toArray();
+      setLinkedHabits(habits);
+    } else {
+      setLinkedHabits([]);
+    }
+  };
 
   const fetchJournalEntries = async () => {
     const entries = await db.journalEntries.orderBy('timestamp').reverse().toArray();
@@ -229,13 +240,39 @@ const Journal: React.FC = () => {
                   <p>Эмоциональное: {entry.emotionalState}</p>
                   <p>Физическое: {entry.physicalState}</p>
                 </div>
-                <div className="mt-4">
+                {/* Отображение связанных привычек */}
+                {entry.linkedHabitIds && entry.linkedHabitIds.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-semibold mb-2">Связанные привычки:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {linkedHabits
+                        .filter(habit => entry.linkedHabitIds?.includes(habit.id!))
+                        .map(habit => (
+                          <span
+                            key={habit.id}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                          >
+                            {habit.name}
+                          </span>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
+                <div className="mt-4 flex space-x-2">
                   <Button
                     size="sm"
                     onClick={() => analyzeEntryWithAI(entry)}
                     disabled={isAnalyzing}
                   >
                     {isAnalyzing ? 'Анализ...' : 'Анализ ИИ'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => fetchLinkedHabits(entry)}
+                  >
+                    Показать привычки
                   </Button>
                 </div>
               </CardContent>

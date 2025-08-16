@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,22 +17,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { db, Habit } from '../lib/db';
 
-interface AddHabitDialogProps {
+interface HealthHabitDialogProps {
+  habit: Habit | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (habit: {
-    name: string;
-    description: string;
-    frequency: string;
-    reminderTime?: string;
-    reminderEnabled?: boolean;
-    alternatingEnabled?: boolean;
-    alternatingPattern?: string[];
-  }) => void;
+  onSave: (habit: Omit<Habit, 'id'> | Habit) => void;
 }
 
-export const AddHabitDialog: React.FC<AddHabitDialogProps> = ({ isOpen, onClose, onSave }) => {
+export const HealthHabitDialog: React.FC<HealthHabitDialogProps> = ({ habit, isOpen, onClose, onSave }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [frequency, setFrequency] = useState('daily');
@@ -41,17 +36,17 @@ export const AddHabitDialog: React.FC<AddHabitDialogProps> = ({ isOpen, onClose,
   const [alternatingEnabled, setAlternatingEnabled] = useState(false);
   const [alternatingPattern, setAlternatingPattern] = useState<string[]>(['work', 'rest']);
 
-  const handleSave = () => {
-    if (name.trim()) {
-      onSave({
-        name,
-        description,
-        frequency,
-        reminderTime: reminderEnabled ? reminderTime : undefined,
-        reminderEnabled,
-        alternatingEnabled,
-        alternatingPattern: alternatingEnabled ? alternatingPattern : undefined
-      });
+  useEffect(() => {
+    if (habit) {
+      setName(habit.name || '');
+      setDescription(habit.description || '');
+      setFrequency(habit.frequency || 'daily');
+      setReminderTime(habit.reminderTime || '');
+      setReminderEnabled(habit.reminderEnabled || false);
+      setAlternatingEnabled(habit.alternatingEnabled || false);
+      setAlternatingPattern(habit.alternatingPattern || ['work', 'rest']);
+    } else {
+      // Сброс значений при создании новой привычки
       setName('');
       setDescription('');
       setFrequency('daily');
@@ -59,6 +54,32 @@ export const AddHabitDialog: React.FC<AddHabitDialogProps> = ({ isOpen, onClose,
       setReminderEnabled(false);
       setAlternatingEnabled(false);
       setAlternatingPattern(['work', 'rest']);
+    }
+  }, [habit, isOpen]);
+
+  const handleSave = () => {
+    if (name.trim()) {
+      const habitData = {
+        name,
+        description,
+        frequency,
+        reminderTime: reminderEnabled ? reminderTime : undefined,
+        reminderEnabled,
+        alternatingEnabled,
+        alternatingPattern: alternatingEnabled ? alternatingPattern : undefined,
+        progress: habit?.progress || 0,
+        streak: habit?.streak || 0,
+        bestStreak: habit?.bestStreak || 0
+      };
+
+      if (habit && habit.id) {
+        // Редактирование существующей привычки
+        onSave({ ...habitData, id: habit.id });
+      } else {
+        // Создание новой привычки
+        onSave(habitData);
+      }
+      
       onClose();
     }
   };
@@ -67,9 +88,11 @@ export const AddHabitDialog: React.FC<AddHabitDialogProps> = ({ isOpen, onClose,
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Добавить новую привычку</DialogTitle>
+          <DialogTitle>{habit?.id ? 'Редактировать привычку здоровья' : 'Добавить привычку здоровья'}</DialogTitle>
           <DialogDescription>
-            Заполните информацию о новой привычке. Нажмите сохранить, когда закончите.
+            {habit?.id
+              ? 'Измените информацию о привычке здоровья.'
+              : 'Заполните информацию о новой привычке здоровья.'}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -82,17 +105,19 @@ export const AddHabitDialog: React.FC<AddHabitDialogProps> = ({ isOpen, onClose,
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="col-span-3"
+              placeholder="Например, Утренняя зарядка"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Описание
             </Label>
-            <Input
+            <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="col-span-3"
+              placeholder="Опишите привычку..."
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">

@@ -85,23 +85,24 @@ export interface SubTask {
 }
 
 export interface JournalEntry {
-  id?: number | string;
-  timestamp: Date;
-  text: string;
-  audioUrl?: string;
-  imageUrl?: string;
-  psychologicalState: number;
-  emotionalState: number;
-  physicalState: number;
-  linkedVisionId?: number;
-  linkedGlobalGoalIds?: number[];
-  linkedStrategicGoalIds?: number[];
-  linkedProjectIds?: number[];
-  linkedSubProjectLevel1Ids?: number[];
-  linkedSubProjectLevel2Ids?: number[];
-  linkedTaskIds?: number[];
-  linkedSubTaskIds?: number[];
-  formedIdeaIds?: number[];
+id?: number | string;
+timestamp: Date;
+text: string;
+audioUrl?: string;
+imageUrl?: string;
+psychologicalState: number;
+emotionalState: number;
+physicalState: number;
+linkedVisionId?: number;
+linkedGlobalGoalIds?: number[];
+linkedStrategicGoalIds?: number[];
+linkedProjectIds?: number[];
+linkedSubProjectLevel1Ids?: number[];
+linkedSubProjectLevel2Ids?: number[];
+linkedTaskIds?: number[];
+linkedSubTaskIds?: number[];
+linkedHabitIds?: number[]; // Связанные привычки
+formedIdeaIds?: number[];
 }
 
 export interface Idea {
@@ -116,15 +117,36 @@ export interface Idea {
 }
 
 export interface Habit {
-  id?: number | string;
+id?: number | string;
+name: string;
+description: string;
+frequency: string;
+progress: number;
+linkedGoalIds?: number[];
+linkedTaskIds?: number[];
+completionTime?: string;
+reminderTime?: string; // Время напоминания
+reminderEnabled?: boolean; // Включены ли напоминания
+alternatingEnabled?: boolean; // Включен ли режим чередования
+alternatingPattern?: string[]; // Паттерн чередования (например, ['work', 'rest'])
+lastCompletedDate?: Date; // Дата последнего выполнения
+streak?: number; // Текущая серия выполнений
+bestStreak?: number; // Лучшая серия выполнений
+}
+
+export interface Hobby {
+  id?: number;
   name: string;
   description: string;
-  frequency: string;
-  progress: number;
-  linkedGoalIds?: number[];
-  linkedTaskIds?: number[];
-  completionTime?: string;
-  }
+  category: string;
+  timeSpent: number; // Время в минутах
+  timeSpentHistory: { date: Date; minutes: number }[];
+  goal?: string; // Цель по хобби
+  goalProgress?: number; // Прогресс выполнения цели в процентах
+  lastTrackedDate?: Date; // Дата последнего отслеживания
+  reminderEnabled?: boolean; // Включены ли напоминания
+  reminderTime?: string; // Время напоминания
+}
   
   export interface Skill {
   id?: number;
@@ -221,6 +243,20 @@ export interface Habit {
   type: string; // Например, 'родитель-ребенок', 'супруги', 'брат-сестра'
   }
   
+  export interface HealthIndicator {
+  id?: number;
+  name: string; // Название показателя (вес, рост, давление и т.д.)
+  value: number; // Значение показателя
+  unit: string; // Единица измерения
+  timestamp: Date; // Время записи
+  }
+   
+  export interface HealthRecommendation {
+  id?: number;
+  text: string; // Текст рекомендации
+  timestamp: Date; // Время создания рекомендации
+  }
+   
   export interface UserSettings {
   id?: number;
   isRegistered: boolean;
@@ -252,7 +288,10 @@ export class HarmonyDB extends Dexie {
   financialGoals!: Table<FinancialGoal>; // Новая таблица
   financialTransactions!: Table<FinancialTransaction>; // Новая таблица
   financialCategories!: Table<FinancialCategory>; // Новая таблица
+  healthIndicators!: Table<HealthIndicator>; // Новая таблица
+  healthRecommendations!: Table<HealthRecommendation>; // Новая таблица
   userSettings!: Table<UserSettings>;
+  hobbies!: Table<Hobby>; // Новая таблица для хобби
   
   constructor() {
     super('HarmonyDB');
@@ -276,7 +315,8 @@ export class HarmonyDB extends Dexie {
       financialTransactions: '++id, date, type, category',
       financialCategories: '++id, name, type',
       userSettings: '++id',
-    });
+      hobbies: '++id, name, category',
+          });
   
   // Обновление до версии 2 с добавлением новых полей в таблицу tasks
   this.version(2).stores({
@@ -298,6 +338,12 @@ export class HarmonyDB extends Dexie {
   // Обновление до версии 5 с добавлением индексов для photoUrl и notes в таблице familyMembers
   this.version(5).stores({
   familyMembers: '++id, name, relationship, photoUrl, notes',
+  });
+   
+  // Обновление до версии 6 с добавлением таблиц для здоровья
+  this.version(6).stores({
+  healthIndicators: '++id, name, timestamp',
+  healthRecommendations: '++id, timestamp'
   });
   }
 
@@ -868,6 +914,85 @@ export class HarmonyDB extends Dexie {
   async deleteFinancialCategory(id: number): Promise<void> {
     await this.financialCategories.delete(id);
   }
-}
   
-  export const db = new HarmonyDB();
+  // HealthIndicator methods
+  async addHealthIndicator(indicator: Omit<HealthIndicator, 'id'>): Promise<number> {
+    return await this.healthIndicators.add(indicator);
+  }
+  
+  async getHealthIndicator(id: number): Promise<HealthIndicator | undefined> {
+    return await this.healthIndicators.get(id);
+  }
+  
+  async getAllHealthIndicators(): Promise<HealthIndicator[]> {
+    return await this.healthIndicators.toArray();
+  }
+  
+  async getHealthIndicatorsByName(name: string): Promise<HealthIndicator[]> {
+    return await this.healthIndicators.where('name').equals(name).toArray();
+  }
+  
+  async getHealthIndicatorsByDateRange(startDate: Date, endDate: Date): Promise<HealthIndicator[]> {
+    return await this.healthIndicators.where('timestamp').between(startDate, endDate).toArray();
+  }
+  
+  async updateHealthIndicator(id: number, indicator: Partial<HealthIndicator>): Promise<number> {
+    return await this.healthIndicators.update(id, indicator);
+  }
+  
+  async deleteHealthIndicator(id: number): Promise<void> {
+    await this.healthIndicators.delete(id);
+  }
+  
+  // HealthRecommendation methods
+  async addHealthRecommendation(recommendation: Omit<HealthRecommendation, 'id'>): Promise<number> {
+    return await this.healthRecommendations.add(recommendation);
+  }
+  
+  async getHealthRecommendation(id: number): Promise<HealthRecommendation | undefined> {
+    return await this.healthRecommendations.get(id);
+  }
+  
+  async getAllHealthRecommendations(): Promise<HealthRecommendation[]> {
+    return await this.healthRecommendations.toArray();
+  }
+  
+  async getHealthRecommendationsByDateRange(startDate: Date, endDate: Date): Promise<HealthRecommendation[]> {
+    return await this.healthRecommendations.where('timestamp').between(startDate, endDate).toArray();
+  }
+  
+  async updateHealthRecommendation(id: number, recommendation: Partial<HealthRecommendation>): Promise<number> {
+    return await this.healthRecommendations.update(id, recommendation);
+  }
+  
+  async deleteHealthRecommendation(id: number): Promise<void> {
+    await this.healthRecommendations.delete(id);
+  }
+}
+
+// Hobby methods
+async addHobby(hobby: Omit<Hobby, 'id'>): Promise<number> {
+  return await this.hobbies.add(hobby);
+}
+
+async getHobby(id: number): Promise<Hobby | undefined> {
+  return await this.hobbies.get(id);
+}
+
+async getAllHobbies(): Promise<Hobby[]> {
+  return await this.hobbies.toArray();
+}
+
+async getHobbiesByCategory(category: string): Promise<Hobby[]> {
+  return await this.hobbies.where('category').equals(category).toArray();
+}
+
+async updateHobby(id: number, hobby: Partial<Hobby>): Promise<number> {
+  return await this.hobbies.update(id, hobby);
+}
+
+async deleteHobby(id: number): Promise<void> {
+  await this.hobbies.delete(id);
+}
+
+export const db = new HarmonyDB();
