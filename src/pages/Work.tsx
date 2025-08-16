@@ -44,6 +44,9 @@ const calculateWorkMetrics = async () => {
       .anyOf(workTaskIds)
       .toArray();
     
+    // Получаем записи журнала, связанные с рабочими задачами
+    const journalEntries = await db.journalEntries.toArray();
+    
     // Рассчитываем метрики
     // 1. Производительность (прогресс по задачам)
     const completedTasks = workTasks.filter(task => task.status === 'completed').length;
@@ -55,10 +58,10 @@ const calculateWorkMetrics = async () => {
     
     // 3. Вовлеченность (средний приоритет задач)
     const priorityValues: Record<string, number> = {
-      'critical-urgent': 4,
-      'important-not-urgent': 3,
-      'not-important-urgent': 2,
-      'not-important-not-urgent': 1
+      'Urgent-Important': 4,
+      'NotUrgent-Important': 3,
+      'Urgent-NotImportant': 2,
+      'NotUrgent-NotImportant': 1
     };
     
     const totalPriorityScore = workTasks.reduce((sum, task) => {
@@ -69,14 +72,54 @@ const calculateWorkMetrics = async () => {
     const engagement = Math.round((avgPriorityScore / 4) * 100); // Нормализуем до 100%
     
     // 4. Обратная связь (средняя оценка из журнала)
-    // Для упрощения используем фиксированное значение
-    const feedback = '4.2/5';
+    // Фильтруем записи журнала, связанные с рабочими задачами
+    const workJournalEntries = journalEntries.filter(entry =>
+      entry.linkedTaskIds && entry.linkedTaskIds.some(id => workTaskIds.includes(id))
+    );
+    
+    // Рассчитываем среднюю оценку из записей журнала
+    const avgFeedbackScore = workJournalEntries.length > 0 ?
+      workJournalEntries.reduce((sum, entry) =>
+        sum + (entry.psychologicalState + entry.emotionalState + entry.physicalState) / 3, 0
+      ) / workJournalEntries.length : 0;
+    
+    const feedback = `${(avgFeedbackScore / 10 * 5).toFixed(1)}/5`; // Преобразуем из шкалы 1-10 в 1-5
+    
+    // 5. Индекс нагрузки (на основе количества задач и их приоритетов)
+    const workloadIndex = Math.min(100, Math.round((totalTasks * avgPriorityScore) / 2)); // Нормализуем до 100
+    
+    // 6. Эффективность отдыха (на основе записей журнала о восстановлении)
+    const recoveryScore = workJournalEntries.length > 0 ?
+      Math.round(workJournalEntries.reduce((sum, entry) => sum + entry.physicalState, 0) / workJournalEntries.length * 10) : 50;
+    
+    // 7. Качество баланса работа/отдых
+    const workHours = workTasks.length * 1.5; // Примерное количество часов на задачи
+    const leisureHours = workJournalEntries.filter(entry =>
+      entry.text.toLowerCase().includes('отдых') ||
+      entry.text.toLowerCase().includes('перерыв') ||
+      entry.text.toLowerCase().includes('break')
+    ).length * 0.5; // Примерное количество часов отдыха
+    
+    const balanceQuality = Math.round(Math.min(100, Math.abs(workHours - leisureHours) * 10)); // Чем ближе к 0, тем лучше баланс
+    
+    // 8. Уровень стресса (на основе записей журнала)
+    const stressLevel = workJournalEntries.length > 0 ?
+      Math.round(workJournalEntries.reduce((sum, entry) => sum + (10 - entry.psychologicalState), 0) / workJournalEntries.length * 10) : 50;
+    
+    // 9. Энергетический уровень (на основе записей журнала)
+    const energyLevel = workJournalEntries.length > 0 ?
+      Math.round(workJournalEntries.reduce((sum, entry) => sum + entry.physicalState, 0) / workJournalEntries.length * 10) : 50;
     
     return [
       { title: 'Производительность', value: `${productivity}%`, target: 90, trend: 'neutral' },
       { title: 'Выполнение задач', value: taskCompletion, target: 95, trend: 'neutral' },
       { title: 'Вовлеченность', value: `${engagement}%`, target: 85, trend: 'neutral' },
       { title: 'Обратная связь', value: feedback, target: 4.5, trend: 'neutral' },
+      { title: 'Индекс нагрузки', value: `${workloadIndex}%`, target: 70, trend: 'neutral' },
+      { title: 'Эффективность отдыха', value: `${recoveryScore}%`, target: 80, trend: 'neutral' },
+      { title: 'Качество баланса', value: `${balanceQuality}%`, target: 30, trend: 'neutral' },
+      { title: 'Уровень стресса', value: `${stressLevel}%`, target: 40, trend: 'neutral' },
+      { title: 'Энергетический уровень', value: `${energyLevel}%`, target: 70, trend: 'neutral' },
     ];
   } catch (error) {
     console.error('Ошибка расчета метрик работы:', error);
@@ -86,12 +129,17 @@ const calculateWorkMetrics = async () => {
       { title: 'Выполнение задач', value: '0/0', target: 95, trend: 'neutral' },
       { title: 'Вовлеченность', value: '0%', target: 85, trend: 'neutral' },
       { title: 'Обратная связь', value: '0/5', target: 4.5, trend: 'neutral' },
+      { title: 'Индекс нагрузки', value: '0%', target: 70, trend: 'neutral' },
+      { title: 'Эффективность отдыха', value: '0%', target: 80, trend: 'neutral' },
+      { title: 'Качество баланса', value: '0%', target: 30, trend: 'neutral' },
+      { title: 'Уровень стресса', value: '0%', target: 40, trend: 'neutral' },
+      { title: 'Энергетический уровень', value: '0%', target: 70, trend: 'neutral' },
     ];
   }
 };
 
 const WorkMetricsDashboard = () => {
-  const [metrics, setMetrics] = React.useState([]);
+  const [metrics, setMetrics] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   
   React.useEffect(() => {
@@ -107,6 +155,11 @@ const WorkMetricsDashboard = () => {
           { title: 'Выполнение задач', value: '0/0', target: 95, trend: 'neutral' },
           { title: 'Вовлеченность', value: '0%', target: 85, trend: 'neutral' },
           { title: 'Обратная связь', value: '0/5', target: 4.5, trend: 'neutral' },
+          { title: 'Индекс нагрузки', value: '0%', target: 70, trend: 'neutral' },
+          { title: 'Эффективность отдыха', value: '0%', target: 80, trend: 'neutral' },
+          { title: 'Качество баланса', value: '0%', target: 30, trend: 'neutral' },
+          { title: 'Уровень стресса', value: '0%', target: 40, trend: 'neutral' },
+          { title: 'Энергетический уровень', value: '0%', target: 70, trend: 'neutral' },
         ]);
       } finally {
         setLoading(false);
@@ -118,8 +171,8 @@ const WorkMetricsDashboard = () => {
   
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {Array.from({ length: 9 }).map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="pb-2">
               <CardTitle className="h-6 bg-gray-200 rounded w-3/4"></CardTitle>
@@ -134,8 +187,35 @@ const WorkMetricsDashboard = () => {
     );
   }
 
+  // Функция для определения цвета прогресс-бара в зависимости от значения
+  const getProgressColor = (title: string, value: string) => {
+    const numericValue = title === 'Выполнение задач' || title === 'Обратная связь'
+      ? (() => {
+          const [current, target] = value.split('/').map(Number);
+          if (target === 0) return 0;
+          return (current / target) * 100;
+        })()
+      : parseFloat(value);
+    
+    // Определяем целевое значение для метрики
+    const metric = metrics.find(m => m.title === title);
+    const target = metric ? metric.target : 0;
+    
+    // Для метрик, где меньше - лучше (уровень стресса, качество баланса)
+    if (title === 'Уровень стресса' || title === 'Качество баланса') {
+      if (numericValue <= target * 0.8) return 'bg-green-500';
+      if (numericValue <= target) return 'bg-yellow-500';
+      return 'bg-red-500';
+    }
+    
+    // Для остальных метрик, где больше - лучше
+    if (numericValue >= target * 1.2) return 'bg-green-500';
+    if (numericValue >= target) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       {metrics.map((metric, index) => (
         <Card key={index} className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
@@ -156,7 +236,7 @@ const WorkMetricsDashboard = () => {
                     })()
                   : parseFloat(metric.value)
               }
-              className="mt-2"
+              className={`mt-2 ${getProgressColor(metric.title, metric.value)}`}
             />
             
             {/* Add trend indicator */}
@@ -195,20 +275,49 @@ const CareerProgressPanel = () => {
     const loadChartData = async () => {
       try {
         // Загрузка реальных данных карьерного роста из базы данных
-        // Для упрощения используем фиктивные данные
+        // Получаем навыки из базы данных
+        const skills = await db.skills.toArray();
+        
+        // Создаем метки для последних 6 месяцев
+        const labels = [];
+        const today = new Date();
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+          labels.push(date.toLocaleString('default', { month: 'short' }));
+        }
+        
+        // Для демонстрации создаем синтетические данные на основе навыков
+        // В реальной реализации здесь будет анализ истории изменений навыков
+        const skillLevels = skills.map(skill => skill.level);
+        const avgSkillLevel = skillLevels.length > 0
+          ? skillLevels.reduce((sum, level) => sum + level, 0) / skillLevels.length
+          : 50;
+        
+        // Создаем данные для графика
+        const skillData = [];
+        const targetData = [];
+        
+        // Генерируем данные для последних 6 месяцев
+        for (let i = 0; i < 6; i++) {
+          // Создаем искусственный рост навыков
+          skillData.push(Math.min(100, Math.max(0, avgSkillLevel + (i * 2) + (Math.random() * 10 - 5))));
+          // Целевые показатели растут немного быстрее
+          targetData.push(Math.min(100, Math.max(0, avgSkillLevel + (i * 3) + (Math.random() * 10 - 5))));
+        }
+        
         const data = {
-          labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'],
+          labels,
           datasets: [
-            { 
-              label: 'Уровень навыков', 
-              data: [65, 67, 70, 72, 75, 78], 
-              borderColor: 'rgb(59, 130, 246)' 
+            {
+              label: 'Уровень навыков',
+              data: skillData,
+              borderColor: 'rgb(59, 130, 246)'
             },
-            { 
-              label: 'Целевые показатели', 
-              data: [60, 65, 70, 75, 80, 85], 
-              borderColor: 'rgb(34, 197, 94)', 
-              borderDash: [5,5] 
+            {
+              label: 'Целевые показатели',
+              data: targetData,
+              borderColor: 'rgb(34, 197, 94)',
+              borderDash: [5,5]
             }
           ]
         };
@@ -283,15 +392,53 @@ const WorkLifeBalanceWidget = () => {
     const calculateBalance = async () => {
       try {
         // Загрузка данных для расчета баланса из базы данных
-        // Для упрощения используем фиктивные данные
+        // Получаем задачи и записи журнала
+        const tasks = await db.tasks.toArray();
+        const journalEntries = await db.journalEntries.toArray();
+        
+        // Рассчитываем рабочие часы на основе задач
+        const workHours = tasks.length * 1.5; // Примерное количество часов на задачи
+        
+        // Рассчитываем часы отдыха на основе записей журнала
+        const leisureEntries = journalEntries.filter(entry =>
+          entry.text.toLowerCase().includes('отдых') ||
+          entry.text.toLowerCase().includes('перерыв') ||
+          entry.text.toLowerCase().includes('break') ||
+          entry.text.toLowerCase().includes('relax')
+        );
+        const leisureHours = leisureEntries.length * 0.5; // Примерное количество часов отдыха
+        
+        // Рассчитываем переработку на основе записей журнала
+        const overtimeEntries = journalEntries.filter(entry =>
+          entry.text.toLowerCase().includes('переработка') ||
+          entry.text.toLowerCase().includes('overtime') ||
+          entry.text.toLowerCase().includes('сверхурочн')
+        );
+        const overtimeHours = overtimeEntries.length * 1; // Примерное количество часов переработки
+        
+        // Рассчитываем уровень стресса на основе записей журнала
+        const stressEntries = journalEntries.filter(entry => entry.psychologicalState < 5);
+        const stressLevel = journalEntries.length > 0 ?
+          Math.round((stressEntries.length / journalEntries.length) * 10) : 5;
+        
+        // Рассчитываем энергетический уровень на основе записей журнала
+        const avgEnergyLevel = journalEntries.length > 0 ?
+          Math.round(journalEntries.reduce((sum, entry) => sum + entry.physicalState, 0) / journalEntries.length) : 5;
+        
+        // Рассчитываем индекс нагрузки
+        const workloadIndex = Math.min(100, Math.round((workHours + overtimeHours) * 5));
+        
+        // Рассчитываем эффективность отдыха
+        const recoveryScore = Math.min(100, Math.round(leisureHours * 10));
+        
         const data = {
-          workloadIndex: 75,
-          recoveryScore: 60,
-          workHours: 9,
-          leisureHours: 3,
-          overtimeHours: 1,
-          stressLevel: 4,
-          energyLevel: 5
+          workloadIndex,
+          recoveryScore,
+          workHours,
+          leisureHours,
+          overtimeHours,
+          stressLevel,
+          energyLevel: avgEnergyLevel
         };
         setBalanceData(data);
       } catch (error) {
@@ -355,8 +502,8 @@ const WorkLifeBalanceWidget = () => {
           </div>
           <Progress value={balanceData.workloadIndex} className="h-3" />
           <div className="text-sm text-muted-foreground mt-2 grid grid-cols-2 gap-2">
-            <div>Рабочие часы: <span className="font-medium">{balanceData.workHours}ч</span></div>
-            <div>Переработка: <span className="font-medium">{balanceData.overtimeHours}ч</span></div>
+            <div>Рабочие часы: <span className="font-medium">{balanceData.workHours.toFixed(1)}ч</span></div>
+            <div>Переработка: <span className="font-medium">{balanceData.overtimeHours.toFixed(1)}ч</span></div>
           </div>
         </div>
         
@@ -372,7 +519,7 @@ const WorkLifeBalanceWidget = () => {
           </div>
           <Progress value={balanceData.recoveryScore} className="h-3" />
           <div className="text-sm text-muted-foreground mt-2 grid grid-cols-2 gap-2">
-            <div>Отдых: <span className="font-medium">{balanceData.leisureHours}ч</span></div>
+            <div>Отдых: <span className="font-medium">{balanceData.leisureHours.toFixed(1)}ч</span></div>
             <div>Энергия: <span className="font-medium">{balanceData.energyLevel}/10</span></div>
           </div>
         </div>
@@ -432,27 +579,40 @@ const WorkPage = () => {
         setGoals(goalsData);
         
         // Загрузка исторических данных из базы данных
-        // Для упрощения используем фиктивные данные
-        const historyData = [
-          {
-            title: 'Повышение до руководителя отдела',
-            date: '2023-06-15',
-            description: 'Получил повышение благодаря успешному завершению проекта по оптимизации процессов.',
-            impact: 'Повышение зарплаты на 20%'
-          },
-          {
-            title: 'Завершение ключевого проекта',
-            date: '2023-03-20',
-            description: 'Успешно завершил проект по автоматизации отчетности, что сэкономило компании 100 часов в месяц.',
-            impact: 'Признание руководства'
-          },
-          {
-            title: 'Получение сертификации',
-            date: '2022-11-10',
-            description: 'Прошел курс по управлению проектами и получил сертификат PMP.',
-            impact: 'Расширение профессиональных навыков'
-          }
-        ];
+        // Для демонстрации используем синтетические данные на основе проектов и задач
+        const projects = await db.projects.toArray();
+        const completedProjects = projects.filter(project => project.status === 'completed');
+        
+        // Создаем исторические события на основе завершенных проектов
+        const historyData = completedProjects.slice(0, 5).map((project, index) => {
+          // Генерируем дату в прошлом
+          const date = new Date();
+          date.setMonth(date.getMonth() - (completedProjects.length - index) * 2);
+          
+          return {
+            title: `Завершение проекта: ${project.name}`,
+            date: date.toISOString().split('T')[0],
+            description: project.description || 'Проект успешно завершен',
+            impact: `Повышение эффективности на ${(index * 10 + 5)}%`
+          };
+        });
+        
+        // Добавляем события на основе целей
+        const achievedGoals = workGoals.filter(goal => goal.progress >= 100);
+        achievedGoals.slice(0, 3).forEach((goal, index) => {
+          const date = new Date();
+          date.setMonth(date.getMonth() - (achievedGoals.length - index) * 3);
+          
+          historyData.push({
+            title: `Достижение цели: ${goal.name}`,
+            date: date.toISOString().split('T')[0],
+            description: goal.smartFormulation || 'Цель успешно достигнута',
+            impact: 'Профессиональный рост'
+          });
+        });
+        
+        // Сортируем по дате
+        historyData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         
         setCareerHistory(historyData);
       } catch (error) {
