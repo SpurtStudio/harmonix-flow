@@ -118,7 +118,7 @@ export async function queryExternalAI(prompt: string): Promise<string> {
     const { queryAI } = await import('./api');
 
     // Отправляем запрос к Cloudflare Worker, который будет обрабатывать интеграцию с внешними ИИ-сервисами
-    const response = await queryAI('general', prompt);
+    const response = await queryAI(prompt, {});
 
     return response.response || "Внешний ИИ не вернул ответ.";
   } catch (error) {

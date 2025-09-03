@@ -26,7 +26,7 @@ import Auth from './pages/Auth'; // Импортируем новую стран
 import Notifications from './pages/Notifications'; // Импортируем новую страницу
 // Импортируем новые страницы сфер жизни
 import Work from './pages/Work';
-import Health from './pages/Health';
+import SimplifiedHealth from './pages/SimplifiedHealth';
 import FamilyFriends from './pages/FamilyFriends';
 import Development from './pages/Development';
 import Hobbies from './pages/Hobbies';
@@ -62,7 +62,7 @@ const AppContent = () => {
           <Route path="/notifications" element={<Notifications />} /> {/* Новый маршрут */}
           {/* Новые маршруты для сфер жизни */}
           <Route path="/work" element={<Work />} />
-          <Route path="/health" element={<Health />} />
+          <Route path="/health" element={<SimplifiedHealth />} />
           <Route path="/family-friends" element={<FamilyFriends />} />
           <Route path="/development" element={<Development />} />
           <Route path="/hobbies" element={<Hobbies />} />

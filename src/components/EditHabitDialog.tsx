@@ -25,7 +25,7 @@ interface EditHabitDialogProps {
   isOpen: boolean;
 }
 
-export const EditHabitDialog: React.FC<EditHabitDialogProps> = ({ habit, onSave, onClose, isOpen }) => {
+export const EditHabitDialog: React.FC<EditHabitDialogProps> = ({ habit, onSave, onClose, isOpen: open }) => {
   const [currentHabit, setCurrentHabit] = useState<Habit | null>(habit);
   const [reminderTime, setReminderTime] = useState(habit?.reminderTime || '');
   const [reminderEnabled, setReminderEnabled] = useState(habit?.reminderEnabled || false);
@@ -61,7 +61,7 @@ export const EditHabitDialog: React.FC<EditHabitDialogProps> = ({ habit, onSave,
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{currentHabit?.id ? 'Редактировать привычку' : 'Создать привычку'}</DialogTitle>
