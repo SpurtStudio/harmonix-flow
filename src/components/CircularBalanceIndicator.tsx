@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useLifeBalanceData } from '@/hooks/useLifeBalanceData';
 import {
   Briefcase,
   Heart,
@@ -22,22 +23,35 @@ interface LifeSphere {
   icon: React.ElementType;
 }
 
-const lifeSpheres: LifeSphere[] = [
-  { id: 'work', name: 'Работа', route: '/work', value: 75, color: 'harmony-work', angle: 0, icon: Briefcase },
-  { id: 'health', name: 'Здоровье', route: '/health', value: 80, color: 'harmony-health', angle: 45, icon: Heart },
-  { id: 'relationships', name: 'Отношения', route: '/family-friends', value: 65, color: 'harmony-relationships', angle: 90, icon: Users2 },
-  { id: 'development', name: 'Развитие', route: '/development', value: 70, color: 'harmony-growth', angle: 135, icon: GraduationCap },
-  { id: 'hobbies', name: 'Хобби', route: '/hobbies', value: 60, color: 'harmony-hobbies', angle: 180, icon: Paintbrush },
-  { id: 'rest', name: 'Отдых', route: '/rest', value: 55, color: 'harmony-rest', angle: 225, icon: Bed },
-  { id: 'finance', name: 'Финансы', route: '/finance', value: 85, color: 'harmony-finance', angle: 270, icon: Landmark },
-  { id: 'spirituality', name: 'Духовность', route: '/spirituality', value: 70, color: 'harmony-spirit', angle: 315, icon: Sparkles }
+// Маппинг сфер жизни с иконками и цветами
+const sphereMapping = [
+  { id: 'work', name: 'Работа', route: '/work', color: 'harmony-work', angle: 0, icon: Briefcase },
+  { id: 'health', name: 'Здоровье', route: '/health', color: 'harmony-health', angle: 45, icon: Heart },
+  { id: 'relationships', name: 'Отношения', route: '/family-friends', color: 'harmony-relationships', angle: 90, icon: Users2 },
+  { id: 'growth', name: 'Развитие', route: '/development', color: 'harmony-growth', angle: 135, icon: GraduationCap },
+  { id: 'hobby', name: 'Хобби', route: '/hobbies', color: 'harmony-hobbies', angle: 180, icon: Paintbrush },
+  { id: 'rest', name: 'Отдых', route: '/rest', color: 'harmony-rest', angle: 225, icon: Bed },
+  { id: 'finance', name: 'Финансы', route: '/finance', color: 'harmony-finance', angle: 270, icon: Landmark },
+  { id: 'spirit', name: 'Духовность', route: '/spirituality', color: 'harmony-spirit', angle: 315, icon: Sparkles }
 ];
 
 const CircularBalanceIndicator: React.FC = () => {
   const navigate = useNavigate();
   const [hoveredSphere, setHoveredSphere] = useState<string | null>(null);
+  const { lifeSpheres, averageBalance, loading } = useLifeBalanceData();
+
+  // Объединяем данные из хука с визуальной информацией
+  const enrichedSpheres = sphereMapping.map(mapping => {
+    const data = lifeSpheres.find(sphere => sphere.id === mapping.id);
+    return {
+      ...mapping,
+      value: data?.value || 0
+    };
+  });
   
-  const totalBalance = Math.round(lifeSpheres.reduce((sum, sphere) => sum + sphere.value, 0) / lifeSpheres.length);
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-[500px]">Загрузка...</div>;
+  }
   const centerSize = 140; // Размер центрального индикатора
   const sphereSize = Math.round(centerSize / 1.5); // Размер сфер в 1.5 раза меньше
   const sphereRadius = 200; // Расстояние от центра до сфер
@@ -69,7 +83,7 @@ const CircularBalanceIndicator: React.FC = () => {
           textAnchor="middle"
           className="text-3xl font-space font-bold fill-foreground"
         >
-          {totalBalance}
+          {averageBalance}
         </text>
         
         <text
@@ -83,7 +97,7 @@ const CircularBalanceIndicator: React.FC = () => {
       </svg>
 
       {/* Индикаторы сфер жизни вокруг центрального круга */}
-      {lifeSpheres.map((sphere) => {
+      {enrichedSpheres.map((sphere) => {
         const position = getSpherePosition(sphere.angle);
         const IconComponent = sphere.icon;
         
@@ -91,14 +105,15 @@ const CircularBalanceIndicator: React.FC = () => {
           <Button
             key={sphere.id}
             variant="ghost"
-            className={`absolute rounded-full glass hover:glass-hover transition-all duration-300 transform hover:scale-110 cursor-pointer flex flex-col items-center justify-center`}
+            className={`absolute rounded-full transition-all duration-300 transform hover:scale-110 cursor-pointer flex flex-col items-center justify-center border-2`}
             style={{
               left: `${position.x}px`,
               top: `${position.y}px`,
               width: `${sphereSize}px`,
               height: `${sphereSize}px`,
-              backgroundColor: `hsl(var(--${sphere.color}) / 0.1)`,
-              border: `2px solid hsl(var(--${sphere.color}))`,
+              backgroundColor: `hsl(var(--${sphere.color}))`,
+              borderColor: `hsl(var(--${sphere.color}))`,
+              color: 'white'
             }}
             onClick={() => navigate(sphere.route)}
             onMouseEnter={() => setHoveredSphere(sphere.id)}
@@ -106,13 +121,9 @@ const CircularBalanceIndicator: React.FC = () => {
             title={`${sphere.name}: ${sphere.value}/100`}
           >
             <IconComponent 
-              className={`w-6 h-6 mb-1`}
-              style={{ color: `hsl(var(--${sphere.color}))` }}
+              className="w-5 h-5 mb-1 text-white"
             />
-            <span 
-              className="text-xs font-bold"
-              style={{ color: `hsl(var(--${sphere.color}))` }}
-            >
+            <span className="text-xs font-bold text-white">
               {sphere.value}
             </span>
           </Button>
@@ -123,10 +134,10 @@ const CircularBalanceIndicator: React.FC = () => {
       {hoveredSphere && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 glass p-3 rounded-lg z-10">
           <p className="text-sm font-medium text-foreground">
-            {lifeSpheres.find(s => s.id === hoveredSphere)?.name}
+            {enrichedSpheres.find(s => s.id === hoveredSphere)?.name}
           </p>
           <p className="text-xs text-muted-foreground">
-            {lifeSpheres.find(s => s.id === hoveredSphere)?.value}/100
+            {enrichedSpheres.find(s => s.id === hoveredSphere)?.value}/100
           </p>
         </div>
       )}

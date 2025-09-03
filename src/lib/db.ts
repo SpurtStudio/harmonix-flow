@@ -976,31 +976,31 @@ export class HarmonyDB extends Dexie {
   async deleteHealthRecommendation(id: number): Promise<void> {
     await this.healthRecommendations.delete(id);
   }
-}
 
-// Hobby methods
-async addHobby(hobby: Omit<Hobby, 'id'>): Promise<number> {
-  return await this.hobbies.add(hobby);
-}
+  // Hobby methods
+  async addHobby(hobby: Omit<Hobby, 'id'>): Promise<number> {
+    return await this.hobbies.add(hobby);
+  }
 
-async getHobby(id: number): Promise<Hobby | undefined> {
-  return await this.hobbies.get(id);
-}
+  async getHobby(id: number): Promise<Hobby | undefined> {
+    return await this.hobbies.get(id);
+  }
 
-async getAllHobbies(): Promise<Hobby[]> {
-  return await this.hobbies.toArray();
-}
+  async getAllHobbies(): Promise<Hobby[]> {
+    return await this.hobbies.toArray();
+  }
 
-async getHobbiesByCategory(category: string): Promise<Hobby[]> {
-  return await this.hobbies.where('category').equals(category).toArray();
-}
+  async getHobbiesByCategory(category: string): Promise<Hobby[]> {
+    return await this.hobbies.where('category').equals(category).toArray();
+  }
 
-async updateHobby(id: number, hobby: Partial<Hobby>): Promise<number> {
-  return await this.hobbies.update(id, hobby);
-}
+  async updateHobby(id: number, hobby: Partial<Hobby>): Promise<number> {
+    return await this.hobbies.update(id, hobby);
+  }
 
-async deleteHobby(id: number): Promise<void> {
-  await this.hobbies.delete(id);
+  async deleteHobby(id: number): Promise<void> {
+    await this.hobbies.delete(id);
+  }
 }
 
 export const db = new HarmonyDB();

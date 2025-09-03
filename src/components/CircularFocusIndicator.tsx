@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, Clock } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Briefcase, Heart, Users2, GraduationCap, Paintbrush, Bed } from 'lucide-react';
 
 interface FocusTask {
   id: string;
@@ -16,11 +16,12 @@ const focusTasks: FocusTask[] = [
   { id: '2', title: 'Пробежка', completed: true, priority: 'high', sphere: 'health', angle: 60 },
   { id: '3', title: 'Звонок родителям', completed: false, priority: 'medium', sphere: 'relationships', angle: 120 },
   { id: '4', title: 'Чтение', completed: false, priority: 'low', sphere: 'development', angle: 180 },
-  { id: '5', title: 'Медитация', completed: false, priority: 'medium', sphere: 'spirituality', angle: 240 },
-  { id: '6', title: 'Планирование', completed: false, priority: 'low', sphere: 'finance', angle: 300 }
+  { id: '5', title: 'Рисование', completed: false, priority: 'medium', sphere: 'hobby', angle: 240 },
+  { id: '6', title: 'Медитация', completed: false, priority: 'low', sphere: 'rest', angle: 300 }
 ];
 
 const CircularFocusIndicator: React.FC = () => {
+  const [hoveredTask, setHoveredTask] = useState<string | null>(null);
   const completedTasks = focusTasks.filter(task => task.completed).length;
   const totalTasks = focusTasks.length;
   const progressPercentage = Math.round((completedTasks / totalTasks) * 100);
@@ -36,24 +37,28 @@ const CircularFocusIndicator: React.FC = () => {
     return { x: x - taskSize / 2, y: y - taskSize / 2 };
   };
 
-  const getPriorityColor = (priority: string, sphere: string) => {
-    switch (priority) {
-      case 'high': return `bg-red-500/20 border-red-500`;
-      case 'medium': return `bg-yellow-500/20 border-yellow-500`;
-      default: return `bg-blue-500/20 border-blue-500`;
-    }
-  };
-
   const getSphereColor = (sphere: string) => {
     const sphereColors: {[key: string]: string} = {
       work: 'harmony-work',
       health: 'harmony-health',
       relationships: 'harmony-relationships',
       development: 'harmony-growth',
-      spirituality: 'harmony-spirit',
-      finance: 'harmony-finance'
+      hobby: 'harmony-hobbies',
+      rest: 'harmony-rest'
     };
     return sphereColors[sphere] || 'harmony-work';
+  };
+
+  const getSphereIcon = (sphere: string) => {
+    const sphereIcons: {[key: string]: React.ElementType} = {
+      work: Briefcase,
+      health: Heart,
+      relationships: Users2,
+      development: GraduationCap,
+      hobby: Paintbrush,
+      rest: Bed
+    };
+    return sphereIcons[sphere] || Circle;
   };
 
   return (
@@ -127,34 +132,51 @@ const CircularFocusIndicator: React.FC = () => {
       {focusTasks.map((task) => {
         const position = getTaskPosition(task.angle);
         const sphereColor = getSphereColor(task.sphere);
+        const SphereIcon = getSphereIcon(task.sphere);
         
         return (
           <Button
             key={task.id}
             variant="ghost"
-            className={`absolute rounded-full glass hover:glass-hover transition-all duration-300 transform hover:scale-110 cursor-pointer flex items-center justify-center`}
+            className={`absolute rounded-full transition-all duration-300 transform hover:scale-110 cursor-pointer flex items-center justify-center border-2`}
             style={{
               left: `${position.x}px`,
               top: `${position.y}px`,
               width: `${taskSize}px`,
               height: `${taskSize}px`,
               backgroundColor: task.completed 
-                ? `hsl(var(--harmony-health) / 0.2)` 
-                : `hsl(var(--${sphereColor}) / 0.1)`,
-              border: `2px solid ${task.completed 
                 ? `hsl(var(--harmony-health))` 
-                : `hsl(var(--${sphereColor}))`}`,
+                : `hsl(var(--${sphereColor}))`,
+              borderColor: task.completed 
+                ? `hsl(var(--harmony-health))` 
+                : `hsl(var(--${sphereColor}))`,
+              color: 'white'
             }}
             title={task.title}
+            onMouseEnter={() => setHoveredTask(task.id)}
+            onMouseLeave={() => setHoveredTask(null)}
           >
             {task.completed ? (
-              <CheckCircle2 className="w-6 h-6 text-harmony-health" />
+              <CheckCircle2 className="w-5 h-5 text-white" />
             ) : (
-              <Circle className="w-6 h-6" style={{ color: `hsl(var(--${sphereColor}))` }} />
+              <SphereIcon className="w-5 h-5 text-white" />
             )}
           </Button>
         );
       })}
+
+      {/* Подсказка для наведенной задачи */}
+      {hoveredTask && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 glass p-3 rounded-lg z-10">
+          <p className="text-sm font-medium text-foreground">
+            {focusTasks.find(t => t.id === hoveredTask)?.title}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {focusTasks.find(t => t.id === hoveredTask)?.sphere} - 
+            {focusTasks.find(t => t.id === hoveredTask)?.priority}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
