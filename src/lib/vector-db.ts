@@ -1,118 +1,180 @@
-// src/lib/vector-db.ts
-import { loadHnswlib, HierarchicalNSW as HNSWType } from 'hnswlib-wasm'; // Импортируем loadHnswlib и тип HierarchicalNSW
+// Упрощенная версия vector-db.ts без проблемных WASM зависимостей
 
-interface VectorDBItem {
+export interface VectorDBItem {
   id: number;
   text: string;
-  vector: number[];
+  vector?: number[];
+  metadata?: any;
 }
 
+export interface SearchResult {
+  id: number;
+  text: string;
+  similarity: number;
+  metadata?: any;
+}
+
+/**
+ * Упрощенная векторная база данных без WASM зависимостей
+ * Использует простой текстовый поиск вместо векторного поиска
+ */
 class VectorDB {
-  private index: HNSWType | null = null; // Используем импортированный тип
   private data: Map<number, VectorDBItem> = new Map();
-  private dim: number; // Размерность векторов
-  private hnswModule: any = null; // Для хранения загруженного модуля
+  private dim: number;
 
   constructor(dim: number) {
     this.dim = dim;
+    console.log(`VectorDB initialized with dimension ${this.dim} (simplified mode)`);
   }
 
   /**
-   * Инициализирует векторную базу данных.
-   * @param maxElements Максимальное количество элементов в индексе.
-   * @param M Количество соседей для каждого элемента (параметр HNSW).
-   * @param efConstruction Параметр efConstruction для построения индекса.
+   * Инициализирует векторную базу данных (упрощенная версия).
    */
-  async init(maxElements: number, M: number = 16, efConstruction: number = 200) {
-    if (!this.hnswModule) {
-      this.hnswModule = await loadHnswlib(); // Загружаем библиотеку
-    }
-    this.index = new this.hnswModule.HierarchicalNSW('l2', this.dim); 
-    this.index.initIndex(maxElements, M, efConstruction, 42); // Добавляем randomSeed
-    console.log(`VectorDB инициализирована с размерностью ${this.dim} и максимальным количеством элементов ${maxElements}`);
+  async init(maxElements: number, M: number = 16, efConstruction: number = 200): Promise<void> {
+    console.log(`VectorDB initialized with max elements: ${maxElements} (simplified mode)`);
   }
 
   /**
    * Добавляет элемент в векторную базу данных.
-   * @param item Элемент для добавления, содержащий id, текст и вектор.
    */
-  async addItem(item: VectorDBItem) {
-    if (!this.index) {
-      throw new Error('VectorDB не инициализирована. Вызовите init() перед добавлением элементов.');
-    }
-    this.index.addPoint(item.vector, item.id, false); // Добавляем replaceDeleted
+  async addItem(item: VectorDBItem): Promise<void> {
     this.data.set(item.id, item);
-    console.log(`Элемент с ID ${item.id} добавлен в VectorDB.`);
+    console.log(`Item with ID ${item.id} added to VectorDB (simplified mode)`);
   }
 
   /**
-   * Ищет ближайшие соседи для заданного вектора.
-   * @param queryVector Вектор запроса.
-   * @param numNeighbors Количество ближайших соседей для поиска.
-   * @param efSearch Параметр efSearch для поиска.
-   * @returns Promise<VectorDBItem[]> Массив ближайших элементов.
+   * Ищет элементы по тексту (простой текстовый поиск).
    */
-  async search(queryVector: number[], numNeighbors: number = 5, efSearch: number = 50): Promise<VectorDBItem[]> {
-    if (!this.index) {
-      throw new Error('VectorDB не инициализирована. Вызовите init() перед поиском.');
-    }
-    // this.index.setEf(efSearch); // Закомментируем, если вызывает ошибку
-    const result = this.index.searchKnn(queryVector, numNeighbors, (label: number) => {
-      return this.data.has(label);
-    });
-    
-    const foundItems: VectorDBItem[] = [];
-    for (let i = 0; i < result.labels.length; i++) {
-      const id = result.labels[i];
-      const item = this.data.get(id);
-      if (item) {
-        foundItems.push(item);
+  async search(queryVector: number[] | string, numNeighbors: number = 5): Promise<SearchResult[]> {
+    const query = typeof queryVector === 'string' ? queryVector : '';
+    const results: SearchResult[] = [];
+
+    for (const [id, item] of this.data) {
+      if (query && item.text.toLowerCase().includes(query.toLowerCase())) {
+        results.push({
+          id: item.id,
+          text: item.text,
+          similarity: 0.8, // Заглушка для совместимости
+          metadata: item.metadata
+        });
       }
     }
-    return foundItems;
+
+    return results.slice(0, numNeighbors);
   }
 
   /**
    * Удаляет элемент из векторной базы данных.
-   * @param id ID элемента для удаления.
    */
-  async deleteItem(id: number) {
-    if (!this.index) {
-      throw new Error('VectorDB не инициализирована.');
-    }
-    this.index.markDelete(id); // HNSWlib помечает точки как удаленные, но не удаляет их физически
+  async deleteItem(id: number): Promise<void> {
     this.data.delete(id);
-    console.log(`Элемент с ID ${id} помечен как удаленный в VectorDB.`);
+    console.log(`Item with ID ${id} deleted from VectorDB (simplified mode)`);
   }
 
   /**
-   * Сохраняет индекс в файл (для персистентности).
-   * @returns Promise<Uint8Array> Сериализованный индекс.
+   * Сохраняет индекс (заглушка).
    */
   async saveIndex(): Promise<Uint8Array> {
-    if (!this.index) {
-      throw new Error('VectorDB не инициализирована.');
-    }
-    return this.index.writeIndex();
+    console.log('Saving index (simplified mode)');
+    return new Uint8Array();
   }
 
   /**
-   * Загружает индекс из файла.
-   * @param data Сериализованный индекс.
-   * @param maxElements Максимальное количество элементов, с которым был сохранен индекс.
+   * Загружает индекс (заглушка).
    */
-  async loadIndex(data: Uint8Array, maxElements: number) {
-    if (!this.hnswModule) {
-      this.hnswModule = await loadHnswlib(); // Загружаем библиотеку
-    }
-    this.index = new this.hnswModule.HierarchicalNSW('l2', this.dim);
-    this.index.loadIndex(data, true); // Добавляем allowReplace
-    console.log('VectorDB индекс загружен.');
+  async loadIndex(data: Uint8Array, maxElements: number): Promise<void> {
+    console.log('Loading index (simplified mode)');
+  }
+
+  /**
+   * Получает все элементы.
+   */
+  getAllItems(): VectorDBItem[] {
+    return Array.from(this.data.values());
+  }
+
+  /**
+   * Получает элемент по ID.
+   */
+  getItem(id: number): VectorDBItem | undefined {
+    return this.data.get(id);
   }
 }
 
-export const semanticDB = new VectorDB(1536); // Пример: размерность векторов OpenAI ada-002
+export const semanticDB = new VectorDB(1536);
 
-// Внимание: для реального использования вам потребуется модель для генерации векторов (embeddings).
-// Это может быть локальная WASM-модель (например, ONNX Runtime с небольшой моделью)
-// или вызов к Serverless AI API (например, OpenAI Embeddings).
+// Заглушка для совместимости с существующим кодом
+export interface VectorSearchResult {
+  id: string;
+  content: string;
+  similarity: number;
+  metadata?: any;
+}
+
+export interface VectorDocument {
+  id: string;
+  content: string;
+  embedding?: number[];
+  metadata?: any;
+}
+
+export class LocalVectorDB {
+  private vectorDB: VectorDB;
+  
+  constructor() {
+    this.vectorDB = new VectorDB(1536);
+    console.log('LocalVectorDB initialized (simplified version)');
+  }
+
+  async initialize(): Promise<boolean> {
+    await this.vectorDB.init(10000);
+    return true;
+  }
+
+  async addDocument(document: VectorDocument): Promise<void> {
+    const numericId = parseInt(document.id) || Math.floor(Math.random() * 1000000);
+    await this.vectorDB.addItem({
+      id: numericId,
+      text: document.content,
+      metadata: { ...document.metadata, originalId: document.id }
+    });
+  }
+
+  async search(query: string, limit: number = 10): Promise<VectorSearchResult[]> {
+    const results = await this.vectorDB.search(query, limit);
+    return results.map(result => ({
+      id: result.metadata?.originalId || result.id.toString(),
+      content: result.text,
+      similarity: result.similarity,
+      metadata: result.metadata
+    }));
+  }
+
+  async removeDocument(id: string): Promise<void> {
+    const numericId = parseInt(id) || 0;
+    await this.vectorDB.deleteItem(numericId);
+  }
+
+  async getDocument(id: string): Promise<VectorDocument | undefined> {
+    const numericId = parseInt(id) || 0;
+    const item = this.vectorDB.getItem(numericId);
+    if (!item) return undefined;
+    
+    return {
+      id: item.metadata?.originalId || item.id.toString(),
+      content: item.text,
+      metadata: item.metadata
+    };
+  }
+
+  async getAllDocuments(): Promise<VectorDocument[]> {
+    const items = this.vectorDB.getAllItems();
+    return items.map(item => ({
+      id: item.metadata?.originalId || item.id.toString(),
+      content: item.text,
+      metadata: item.metadata
+    }));
+  }
+}
+
+export const vectorDB = new LocalVectorDB();

@@ -25,7 +25,7 @@ interface EditHabitDialogProps {
   isOpen: boolean;
 }
 
-export const EditHabitDialog: React.FC<EditHabitDialogProps> = ({ habit, onSave, onClose }) => {
+export const EditHabitDialog: React.FC<EditHabitDialogProps> = ({ habit, onSave, onClose, isOpen }) => {
   const [currentHabit, setCurrentHabit] = useState<Habit | null>(habit);
   const [reminderTime, setReminderTime] = useState(habit?.reminderTime || '');
   const [reminderEnabled, setReminderEnabled] = useState(habit?.reminderEnabled || false);

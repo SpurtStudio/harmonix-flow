@@ -16,6 +16,7 @@ export interface GlobalGoal {
   progress: number;
   strategicGoalIds?: number[];
   lifeSphere: string; // Связь со сферами жизни
+  linkedHabitIds?: number[]; // Связанные привычки
 }
 
 export interface StrategicGoal {
@@ -102,6 +103,7 @@ linkedSubProjectLevel2Ids?: number[];
 linkedTaskIds?: number[];
 linkedSubTaskIds?: number[];
 linkedHabitIds?: number[]; // Связанные привычки
+linkedHealthIndicatorIds?: number[]; // Связанные индикаторы здоровья
 formedIdeaIds?: number[];
 }
 
