@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const HealthJournalSync: React.FC = () => {
+export const HealthJournalSync: React.FC = () => {
   return (
     <Card>
       <CardHeader>
@@ -15,5 +15,3 @@ const HealthJournalSync: React.FC = () => {
     </Card>
   );
 };
-
-export { HealthJournalSync };

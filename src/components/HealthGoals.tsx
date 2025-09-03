@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const HealthGoals: React.FC = () => {
+export const HealthGoals: React.FC = () => {
   return (
     <Card>
       <CardHeader>
@@ -15,5 +15,3 @@ const HealthGoals: React.FC = () => {
     </Card>
   );
 };
-
-export { HealthGoals };

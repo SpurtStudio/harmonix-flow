@@ -8,8 +8,8 @@ import { LifeDashboard } from "@/components/LifeDashboard";
 import { UserPreferencesProvider, useUserPreferences } from "@/context/UserPreferencesContext"; // Импортируем контекст
 import { TutorialProvider } from "./context/TutorialContext"; // Импортируем TutorialProvider
 import Index from "./pages/Index";
-import Calendar from "./pages/Calendar";
-import Goals from "./pages/Goals";
+import SimplifiedCalendar from "./pages/SimplifiedCalendar";
+import SimplifiedGoals from "./pages/SimplifiedGoals";
 import Journal from "./pages/Journal";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
@@ -44,8 +44,8 @@ const AppContent = () => {
       <main className="lg:pl-64 pl-0">
         <Routes>
           <Route path="/" element={<LifeDashboard />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/goals" element={<Goals />} />
+          <Route path="/calendar" element={<SimplifiedCalendar />} />
+          <Route path="/goals" element={<SimplifiedGoals />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
