@@ -1,53 +1,25 @@
-// src/pages/Development.tsx
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { Progress } from '../components/ui/progress';
-import { db } from '../lib/db';
-import { queryAI } from '../lib/api';
-import { useToast } from '../hooks/use-toast';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-interface Skill {
-  id: number;
-  name: string;
-  level: number; // 0-100
-  goal: number; // Целевой уровень 0-100
-  category: string;
-  lastUpdated: Date;
-}
-
-interface LearningGoal {
-  id: number;
-  title: string;
-  description: string;
-  progress: number; // 0-100
-  deadline?: Date;
-  skills: string[]; // Связанные навыки
-}
-
-interface LearningProject {
-  id: number;
-  title: string;
-  description: string;
-  progress: number; // 0-100
-  startDate: Date;
-  endDate?: Date;
-  goals: number[]; // Связанные цели
-}
+import React from 'react';
+import { PageWrapper } from '@/components/PageWrapper';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Development: React.FC = () => {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [learningGoals, setLearningGoals] = useState<LearningGoal[]>([]);
-  const [learningProjects, setLearningProjects] = useState<LearningProject[]>([]);
-  const [newSkill, setNewSkill] = useState({ name: '', category: '' });
-  const [newGoal, setNewGoal] = useState({ title: '', description: '', deadline: '' });
-  const [newProject, setNewProject] = useState({ title: '', description: '', startDate: new Date().toISOString().split('T')[0] });
-  const { toast } = useToast();
+  return (
+    <PageWrapper title="Развитие">
+      <Card>
+        <CardHeader>
+          <CardTitle>Развитие</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Функционал развития временно упрощен для стабильной работы главной страницы.
+          </p>
+        </CardContent>
+      </Card>
+    </PageWrapper>
+  );
+};
 
-  // Загрузка данных при монтировании
+export default Development;
   useEffect(() => {
     loadDevelopmentData();
   }, []);

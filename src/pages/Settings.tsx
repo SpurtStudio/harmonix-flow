@@ -1,53 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Shield, Bell, Palette, Globe, Database, Zap, Moon } from 'lucide-react';
+import React from 'react';
+import { PageWrapper } from '@/components/PageWrapper';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useUserPreferences } from '@/context/UserPreferencesContext';
-import { startSync, stopSync } from '@/lib/sync';
-import { db } from '@/lib/db';
 
-export default function Settings() {
-  const [notifications, setNotifications] = useState(true);
-  const [localMode, setLocalMode] = useState(true);
-  const {
-    isBeginnerMode,
-    toggleBeginnerMode,
-    isLowMood,
-    setLowMood,
-    isPowerSavingMode,
-    togglePowerSavingMode,
-    hideAnxietyElements,
-    toggleHideAnxietyElements,
-  } = useUserPreferences();
+const Settings: React.FC = () => {
+  return (
+    <PageWrapper title="Настройки">
+      <Card>
+        <CardHeader>
+          <CardTitle>Настройки</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Функционал настроек временно упрощен для стабильной работы главной страницы.
+          </p>
+        </CardContent>
+      </Card>
+    </PageWrapper>
+  );
+};
 
-  const [darkMode, setDarkMode] = useState(document.documentElement.classList.contains('dark'));
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  const handleClearLocalData = async () => {
-    if (window.confirm('Вы уверены, что хотите очистить все локальные данные? Это действие необратимо.')) {
-      try {
-        await db.delete();
-        localStorage.clear();
-        alert('Все локальные данные успешно очищены. Приложение будет перезагружено.');
-        window.location.reload();
-      } catch (error) {
-        console.error('Ошибка при очистке локальных данных:', error);
-        alert('Произошла ошибка при очистке данных. Пожалуйста, попробуйте снова.');
-      }
+export default Settings;
     }
   };
 

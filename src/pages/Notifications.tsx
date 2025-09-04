@@ -1,53 +1,25 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { db, Notification } from '../lib/db'; // Импорт db и интерфейса Notification
+import React from 'react';
+import { PageWrapper } from '@/components/PageWrapper';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Notifications: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [newNotificationTitle, setNewNotificationTitle] = useState('');
-  const [newNotificationDescription, setNewNotificationDescription] = useState('');
-  const [newNotificationType, setNewNotificationType] = useState('system_message'); // Заглушка для типа
+  return (
+    <PageWrapper title="Уведомления">
+      <Card>
+        <CardHeader>
+          <CardTitle>Уведомления</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Функционал уведомлений временно упрощен для стабильной работы главной страницы.
+          </p>
+        </CardContent>
+      </Card>
+    </PageWrapper>
+  );
+};
 
-  useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        const loadedNotifications = await db.notifications.orderBy('timestamp').reverse().toArray();
-        setNotifications(loadedNotifications);
-      } catch (error) {
-        console.error('Ошибка при загрузке уведомлений:', error);
-      }
-    };
-    loadNotifications();
-  }, []);
-
-  const handleAddNotification = useCallback(async () => {
-    if (!newNotificationTitle.trim() || !newNotificationDescription.trim()) {
-      alert('Заголовок и описание уведомления не могут быть пустыми.');
-      return;
-    }
-    try {
-      await db.notifications.add({
-        title: newNotificationTitle,
-        description: newNotificationDescription,
-        timestamp: new Date(),
-        read: false,
-        type: newNotificationType,
-      });
-      setNewNotificationTitle('');
-      setNewNotificationDescription('');
-      setNewNotificationType('system_message');
-      // Перезагружаем уведомления после добавления
-      const loadedNotifications = await db.notifications.orderBy('timestamp').reverse().toArray();
-      setNotifications(loadedNotifications);
-      alert('Уведомление добавлено!');
-    } catch (error) {
-      console.error('Ошибка при добавлении уведомления:', error);
-      alert('Ошибка при добавлении уведомления.');
-    }
-  }, [newNotificationTitle, newNotificationDescription, newNotificationType]);
+export default Notifications;
 
   return (
     <div className="p-6 space-y-6">

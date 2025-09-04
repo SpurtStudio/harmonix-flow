@@ -118,11 +118,8 @@ export const UserPreferencesProvider = ({ children }: { children: ReactNode }) =
     if (cryptoKey) {
       try {
         const stringValue = JSON.stringify(value);
-        const encrypted = await encryptData(stringValue, cryptoKey);
-        const encryptedString = JSON.stringify({
-          encryptedData: Array.from(new Uint8Array(encrypted.encryptedData)),
-          iv: Array.from(encrypted.iv)
-        });
+        const encrypted = await encryptData(stringValue);
+        const encryptedString = JSON.stringify(encrypted);
         localStorage.setItem(key, encryptedString);
       } catch (error) {
         console.error(`Ошибка при шифровании и сохранении ${key}:`, error);
@@ -140,10 +137,8 @@ export const UserPreferencesProvider = ({ children }: { children: ReactNode }) =
         if (saved) {
           const parsed = JSON.parse(saved);
           // Проверяем, зашифрованы ли данные
-          if (parsed.encryptedData && parsed.iv) {
-            const encryptedData = new Uint8Array(parsed.encryptedData).buffer;
-            const iv = new Uint8Array(parsed.iv);
-            const decrypted = await decryptData(encryptedData, iv, cryptoKey);
+          if (typeof parsed === 'string') {
+            const decrypted = await decryptData(parsed);
             return JSON.parse(decrypted);
           } else {
             // Данные не зашифрованы (для обратной совместимости)

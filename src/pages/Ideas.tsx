@@ -1,53 +1,25 @@
-// src/pages/Ideas.tsx
-import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Checkbox } from '../components/ui/checkbox';
-import { Badge } from '../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
-import { db, Idea, GlobalGoal, Project, Task, JournalEntry } from '../lib/db'; // Импорт db и интерфейсов
-import { useChangePropagation } from '../hooks/use-change-propagation'; // Для системы оперативных изменений
-import { analyzeLocalData } from '../lib/ai'; // Для ИИ-анализа
+import React from 'react';
+import { PageWrapper } from '@/components/PageWrapper';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Ideas: React.FC = () => {
-  const { propagateChange } = useChangePropagation();
-  const [ideas, setIdeas] = useState<Idea[]>([]);
-  const [goals, setGoals] = useState<GlobalGoal[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [newIdeaName, setNewIdeaName] = useState('');
-  const [newIdeaDescription, setNewIdeaDescription] = useState('');
-  const [newIdeaTags, setNewIdeaTags] = useState<string[]>([]);
-  const [newIdeaCategory, setNewIdeaCategory] = useState('');
-  const [newIdeaLinkedGoalIds, setNewIdeaLinkedGoalIds] = useState<number[]>([]);
-  const [newIdeaLinkedProjectIds, setNewIdeaLinkedProjectIds] = useState<number[]>([]);
-  const [newIdeaLinkedTaskIds, setNewIdeaLinkedTaskIds] = useState<number[]>([]);
-  const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
-  const [isIdeaDetailOpen, setIsIdeaDetailOpen] = useState(false);
-  const [cartesianSquare, setCartesianSquare] = useState({
-    define: '',
-    imagine: '',
-    plan: '',
-    act: ''
-  });
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
-  const [newTagInput, setNewTagInput] = useState('');
+  return (
+    <PageWrapper title="Идеи">
+      <Card>
+        <CardHeader>
+          <CardTitle>Идеи</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Функционал идей временно упрощен для стабильной работы главной страницы.
+          </p>
+        </CardContent>
+      </Card>
+    </PageWrapper>
+  );
+};
 
-  useEffect(() => {
-    const loadIdeas = async () => {
-      try {
-        const loadedIdeas = await db.ideas.toArray();
-        setIdeas(loadedIdeas);
-      } catch (error) {
-        console.error('Ошибка при загрузке идей:', error);
-      }
+export default Ideas;
     };
     
     const loadGoals = async () => {

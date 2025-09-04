@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageWrapper } from './PageWrapper';
+import { PageWrapper } from '../components/PageWrapper';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UpcomingTasks } from './UpcomingTasks';

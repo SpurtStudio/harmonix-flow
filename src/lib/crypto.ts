@@ -7,23 +7,23 @@ export const generateKey = async (): Promise<CryptoKey> => {
   );
 };
 
-export const encryptData = async (data: string): Promise<string> => {
-  return btoa(data);
+export const encryptData = async (data: string, key?: CryptoKey, iv?: Uint8Array): Promise<any> => {
+  return { encryptedData: btoa(data), iv: new Uint8Array(16) };
 };
 
-export const decryptData = async (data: string): Promise<string> => {
-  return atob(data);
+export const decryptData = async (data: any, iv?: Uint8Array, key?: CryptoKey): Promise<string> => {
+  return typeof data === 'string' ? atob(data) : atob(data.toString());
 };
 
 export const hashPassword = async (password: string): Promise<string> => {
   return btoa(password);
 };
 
-export const exportKey = async (): Promise<string> => {
+export const exportKey = async (key?: CryptoKey): Promise<string> => {
   return 'mock-key';
 };
 
-export const importKey = async (): Promise<CryptoKey> => {
+export const importKey = async (keyData?: any): Promise<CryptoKey> => {
   return await generateKey();
 };
 

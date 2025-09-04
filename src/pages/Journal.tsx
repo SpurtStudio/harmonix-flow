@@ -1,53 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Textarea } from '../components/ui/textarea';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Input } from '../components/ui/input';
-import { db, JournalEntry, Habit } from '../lib/db';
-import { useWhisperSpeechRecognition } from '../hooks/useWhisperSpeechRecognition';
-import { queryAI } from '../lib/api'; // Импорт функции для запросов к ИИ
+import React from 'react';
+import { PageWrapper } from '@/components/PageWrapper';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Journal: React.FC = () => {
-  const [entryText, setEntryText] = useState('');
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [psychologicalState, setPsychologicalState] = useState(5); // От 1 до 10
-  const [emotionalState, setEmotionalState] = useState(5);     // От 1 до 10
-  const [physicalState, setPhysicalState] = useState(5);      // От 1 до 10
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null); // Состояние для анализа ИИ
-  const [isAnalyzing, setIsAnalyzing] = useState(false); // Состояние для индикатора анализа
-  const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]); // Связанные привычки
+  return (
+    <PageWrapper title="Дневник">
+      <Card>
+        <CardHeader>
+          <CardTitle>Дневник</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Функционал дневника временно упрощен для стабильной работы главной страницы.
+          </p>
+        </CardContent>
+      </Card>
+    </PageWrapper>
+  );
+};
 
-  const { isListening, transcript, error, startListening, stopListening, resetTranscript } = useWhisperSpeechRecognition();
-
-  useEffect(() => {
-    if (transcript) {
-      setEntryText(prev => prev + transcript);
-      resetTranscript();
-    }
-  }, [transcript, resetTranscript]);
-
-  useEffect(() => {
-    fetchJournalEntries();
-  }, []);
-  
-  // Функция для получения связанных привычек
-  const fetchLinkedHabits = async (entry: JournalEntry) => {
-    if (entry.linkedHabitIds && entry.linkedHabitIds.length > 0) {
-      const habits = await db.habits.where('id').anyOf(entry.linkedHabitIds).toArray();
-      setLinkedHabits(habits);
-    } else {
-      setLinkedHabits([]);
-    }
-  };
-
-  const fetchJournalEntries = async () => {
-    const entries = await db.journalEntries.orderBy('timestamp').reverse().toArray();
-    setJournalEntries(entries);
-  };
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+export default Journal;
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       setImageFile(file);

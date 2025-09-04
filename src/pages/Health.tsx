@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageWrapper } from '../components/PageWrapper';
+import { PageWrapper } from '@/components/PageWrapper';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Health: React.FC = () => {

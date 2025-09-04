@@ -1,53 +1,25 @@
-// src/pages/Tasks.tsx
-import React, { useEffect, useState, useCallback } from 'react';
-import { useChangePropagation } from '../hooks/use-change-propagation';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Label } from '../components/ui/label';
-import { db, Task, SubTask } from '../lib/db'; // Импорт db и интерфейсов Task, SubTask
-import { analyzeLocalData } from '../lib/ai'; // Для ИИ-анализа
-import { queryAI } from '../lib/api'; // Для внешнего ИИ-запроса
+import React from 'react';
+import { PageWrapper } from '@/components/PageWrapper';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Tasks: React.FC = () => {
-  const { propagateChange, isAnalyzing, propagationLogs } = useChangePropagation();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [subTasks, setSubTasks] = useState<SubTask[]>([]); // Для хранения подзадач
-  const [newTaskName, setNewTaskName] = useState('');
-  const [newTaskDescription, setNewTaskDescription] = useState('');
-  const [newTaskPriority, setNewTaskPriority] = useState<'Urgent-Important' | 'NotUrgent-Important' | 'Urgent-NotImportant' | 'NotUrgent-NotImportant'>('NotUrgent-Important');
-  const [newTaskContext, setNewTaskContext] = useState({
-    place: '',
-    tool: '',
-    energy: ''
-  });
-  
-  // Состояния для фильтрации и сортировки
-  const [filterPriority, setFilterPriority] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('name');
-  
-  // Состояния для отображения деталей задачи
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
-  
-  // Состояния для подзадач
-  const [newSubTaskName, setNewSubTaskName] = useState('');
-  const [newSubTaskDescription, setNewSubTaskDescription] = useState('');
-  
-  // Состояния для SMART шаблона
-  const [smartTemplate, setSmartTemplate] = useState({
-    specific: '',
-    measurable: '',
-    achievable: '',
-    relevant: '',
-    timeBound: ''
-  });
-  
-  // Состояния для повторяющихся задач
-  const [recurringPattern, setRecurringPattern] = useState<string>('');
+  return (
+    <PageWrapper title="Задачи">
+      <Card>
+        <CardHeader>
+          <CardTitle>Задачи</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Функционал задач временно упрощен для стабильной работы главной страницы.
+          </p>
+        </CardContent>
+      </Card>
+    </PageWrapper>
+  );
+};
+
+export default Tasks;
   
   // Состояния для делегирования
   const [delegateTo, setDelegateTo] = useState<string>('');

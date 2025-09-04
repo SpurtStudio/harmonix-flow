@@ -1,53 +1,25 @@
-// src/pages/Habits.tsx
-import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { db, Habit } from '../lib/db'; // Импорт db и интерфейса Habit
-import { Progress } from '../components/ui/progress'; // Импорт компонента прогресса
-import { AddHabitDialog } from '../components/AddHabitDialog';
-import { EditHabitDialog } from '../components/EditHabitDialog';
-import { useChangePropagation } from '../hooks/use-change-propagation';
+import React from 'react';
+import { PageWrapper } from '@/components/PageWrapper';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Habits: React.FC = () => {
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [newHabitName, setNewHabitName] = useState('');
-  const [newHabitDescription, setNewHabitDescription] = useState('');
-  const [newHabitFrequency, setNewHabitFrequency] = useState('daily'); // daily, weekly, monthly
-  const [isAddHabitDialogOpen, setIsAddHabitDialogOpen] = useState(false);
-  const [isEditHabitDialogOpen, setIsEditHabitDialogOpen] = useState(false);
-  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
-  const { propagateChange, applyAdjustments } = useChangePropagation();
+  return (
+    <PageWrapper title="Привычки">
+      <Card>
+        <CardHeader>
+          <CardTitle>Привычки</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Функционал привычек временно упрощен для стабильной работы главной страницы.
+          </p>
+        </CardContent>
+      </Card>
+    </PageWrapper>
+  );
+};
 
-  useEffect(() => {
-    const loadHabits = async () => {
-      try {
-        const loadedHabits = await db.habits.toArray();
-        setHabits(loadedHabits);
-      } catch (error) {
-        console.error('Ошибка при загрузке привычек:', error);
-      }
-    };
-    loadHabits();
-  }, []);
-
-  const handleAddHabit = useCallback(async (habitData: {
-    name: string;
-    description: string;
-    frequency: string;
-    reminderTime?: string;
-    reminderEnabled?: boolean;
-    alternatingEnabled?: boolean;
-    alternatingPattern?: string[];
-  }) => {
-    if (!habitData.name.trim()) {
-      alert('Название привычки не может быть пустым.');
-      return;
-    }
-    try {
-      const newHabit: Omit<Habit, 'id'> = {
-        name: habitData.name,
+export default Habits;
         description: habitData.description,
         frequency: habitData.frequency,
         progress: 0, // Начальный прогресс

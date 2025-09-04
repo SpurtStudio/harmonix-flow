@@ -1,53 +1,25 @@
-// src/pages/Hobbies.tsx
-import React, { useState, useEffect } from 'react';
-import { db, Hobby } from '../lib/db';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { AddHobbyDialog } from '../components/AddHobbyDialog';
-import { EditHobbyDialog } from '../components/EditHobbyDialog';
-import { HobbyTimeTracker } from '../components/HobbyTimeTracker';
-import { HobbyStats } from '../components/HobbyStats';
+import React from 'react';
+import { PageWrapper } from '@/components/PageWrapper';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Hobbies: React.FC = () => {
-  const [hobbies, setHobbies] = useState<Hobby[]>([]);
-  const [isAddHobbyDialogOpen, setIsAddHobbyDialogOpen] = useState(false);
-  const [isEditHobbyDialogOpen, setIsEditHobbyDialogOpen] = useState(false);
-  const [selectedHobby, setSelectedHobby] = useState<Hobby | null>(null);
-  const [selectedHobbyForTracking, setSelectedHobbyForTracking] = useState<Hobby | null>(null);
+  return (
+    <PageWrapper title="Хобби">
+      <Card>
+        <CardHeader>
+          <CardTitle>Хобби</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Функционал хобби временно упрощен для стабильной работы главной страницы.
+          </p>
+        </CardContent>
+      </Card>
+    </PageWrapper>
+  );
+};
 
-  useEffect(() => {
-    const loadHobbies = async () => {
-      try {
-        const loadedHobbies = await db.hobbies.toArray();
-        setHobbies(loadedHobbies);
-      } catch (error) {
-        console.error('Ошибка при загрузке хобби:', error);
-      }
-    };
-    loadHobbies();
-  }, []);
-
-  const handleAddHobby = async (hobbyData: {
-    name: string;
-    description: string;
-    category: string;
-    goal?: string;
-    reminderTime?: string;
-    reminderEnabled?: boolean;
-  }) => {
-    if (!hobbyData.name.trim()) {
-      alert('Название хобби не может быть пустым.');
-      return;
-    }
-    try {
-      const newHobby: Omit<Hobby, 'id'> = {
-        name: hobbyData.name,
-        description: hobbyData.description,
-        category: hobbyData.category,
-        timeSpent: 0,
-        timeSpentHistory: [],
-        goal: hobbyData.goal,
-        goalProgress: 0,
+export default Hobbies;
         reminderEnabled: hobbyData.reminderEnabled,
         reminderTime: hobbyData.reminderTime,
       };
